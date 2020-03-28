@@ -1,0 +1,71 @@
+﻿@model IEnumerable<TrainingProject.Web.Models.AnswerOptionModel>
+
+@{
+    ViewData["Title"] = "Edit Question";
+
+    int testId = 0;
+    if (ViewData.ContainsKey("TestId"))
+    {
+        int.TryParse(ViewData["TestId"].ToString(), out testId);
+    }
+
+    int questionId = 0;
+    if (ViewData.ContainsKey("QuestionId"))
+    {
+        int.TryParse(ViewData["QuestionId"].ToString(), out questionId);
+    }
+
+    string questionType = string.Empty;
+    if (ViewData.ContainsKey("QuestionType"))
+    {
+        questionType = ViewData["QuestionType"].ToString();
+    }
+}
+
+    <h5>@questionId. @ViewData["QuestionText"]</h5>
+<p>
+    @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
+        new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Id)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsValid)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QuestionId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Text)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IsValid)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.QuestionId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Text)
+                </td>
+                <td>
+                    @*@Html.ActionLink("Edit", "EditAnswer", "Test",
+                        new { @TestId = item.Id, @QuestionId = item.Id, @QuestionType = questionType,  @AnswerId = item.Id }, new { @class = "btn btn-primary" })*@
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

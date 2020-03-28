@@ -4,9 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using TrainingProject.Common;
+using TrainingProject.Data;
+using TrainingProject.Domain.Logic;
+using TrainingProject.Domain.Logic.Managers;
 
 namespace TrainingProject.Web
 {

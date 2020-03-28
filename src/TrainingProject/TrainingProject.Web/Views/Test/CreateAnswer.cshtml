@@ -1,0 +1,50 @@
+﻿@model TrainingProject.Web.Models.AnswerOptionModel
+
+@{
+    ViewData["Title"] = "Create Answer";
+}
+
+<h4>Create Answer</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-controller="Test" asp-action="CreateAnswer">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Text" class="control-label"></label>
+                <input asp-for="Text" class="form-control" />
+                <span asp-validation-for="Text" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsValid" /> @Html.DisplayNameFor(model => model.IsValid)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="TestId" class="control-label"></label>
+                <input asp-for="TestId" class="form-control" />
+                <span asp-validation-for="TestId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="QuestionId" class="control-label"></label>
+                <input asp-for="QuestionId" class="form-control" />
+                <span asp-validation-for="QuestionId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="QuestionType" class="control-label"></label>
+                <select asp-for="QuestionType" class="form-control">
+                    <option>options</option>
+                </select>
+                <span asp-validation-for="QuestionType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

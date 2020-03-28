@@ -1,0 +1,47 @@
+﻿@model TrainingProject.Web.Models.QuestionModel
+
+<h4>Create Question</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-controller="Test" asp-action="CreateQuestion">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Text" class="control-label"></label>
+            </div>
+            <div class="form-group">
+                <textarea asp-for="Text" rows="5"></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="Stage" class="control-label"></label>
+                <input asp-for="Stage" class="form-control" />
+                <span asp-validation-for="Stage" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Points" class="control-label"></label>
+                <input asp-for="Points" class="form-control" />
+                <span asp-validation-for="Points" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="QuestionType" class="control-label"></label>
+                <select asp-for="QuestionType" class="form-control">
+                    <option>options</option>
+                </select>
+                <span asp-validation-for="QuestionType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TestId" class="control-label"></label>
+                <input asp-for="TestId" class="form-control" />
+                <span asp-validation-for="TestId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
