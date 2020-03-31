@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using TrainingProject.Common;
 using TrainingProject.Domain.Models;
 
@@ -22,7 +24,7 @@ namespace TrainingProject.Domain.Logic
         {
             var test = new Test
             {
-                Name = name
+                Name = name,
             };
 
             return test;
@@ -36,7 +38,7 @@ namespace TrainingProject.Domain.Logic
                 Stage = stage,
                 Points = points,
                 QuestionType = questionType,
-                TestId = testId
+                TestId = testId,
             };
 
             return question;

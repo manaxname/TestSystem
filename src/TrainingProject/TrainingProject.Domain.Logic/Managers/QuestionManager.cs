@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using TrainingProject.Common;
@@ -60,6 +61,27 @@ namespace TrainingProject.Domain.Logic.Managers
             throw new NotImplementedException();
         }
 
+        public DomainQuestion GetFirstQuestionByTestId(int testId)
+        {
+            if (!_testManager.IsTestExists(testId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "Test does't exist.");
+            }
+
+            if (!_tpContext.Questions.Any())
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: $"Test does't contain any questions. Test: {testId}");
+            }
+
+            var dataQuestion = _tpContext.Questions.First(question => question.TestId == testId);
+
+            var domainQuestion = _mapper.Map<DomainQuestion>(dataQuestion);
+
+            return domainQuestion;
+        }
+        
         public DomainQuestion GetQuestionById(int id)
         {
             if (!IsQuestionExists(id))
@@ -73,6 +95,17 @@ namespace TrainingProject.Domain.Logic.Managers
             var domainQuestion = _mapper.Map<DomainQuestion>(dataQuestion);
 
             return domainQuestion;
+        }
+
+        public int GetQuestionCountByTestId(int testId)
+        {
+            if (!_testManager.IsTestExists(testId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "Test does't exist.");
+            }
+
+            return _tpContext.Questions.Count(q => q.TestId == testId);
         }
 
         public IEnumerable<DomainQuestion> GetQuestionsByTestId(int testId)
@@ -110,6 +143,28 @@ namespace TrainingProject.Domain.Logic.Managers
         public string GetQuestionTypeById(int id)
         {
             return GetQuestionById(id).QuestionType;
+        }
+
+        public DomainQuestion GetRandomQuestionInTestByStage(int testId, int stage)
+        {
+            if (!_testManager.IsTestExists(testId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "Test does't exist.");
+            }
+
+            var dataQuestions = _tpContext.Questions
+                .Where(question => question.TestId == testId && question.Stage == stage)
+                .ToList();
+
+            var rnd = new Random();
+            var randomIndex = rnd.Next(dataQuestions.Count);
+
+            var randomDataQuestion = dataQuestions[randomIndex];
+
+            var domainQuestion = _mapper.Map<DomainQuestion>(randomDataQuestion);
+
+            return domainQuestion;
         }
 
         public bool IsQuestionExists(int id)

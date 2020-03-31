@@ -46,10 +46,6 @@ namespace TrainingProject.Web.Controllers
                     {
                         var id = _userManager.CreateUser(model.Email, model.Password, UserRoles.User);
 
-                        var newDomainUser = _userManager.GetUserById(id);
-
-                        //await Authenticate(newDomainUser);
-
                         return RedirectToAction("Login", "Account");
                     }
                 }

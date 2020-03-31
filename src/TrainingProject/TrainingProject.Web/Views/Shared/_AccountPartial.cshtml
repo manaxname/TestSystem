@@ -11,6 +11,6 @@
 @if ((await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded)
 {
     <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="" asp-controller="Test" asp-action="ShowTestsToUsers">Tests</a>
+        <a class="nav-link text-dark" asp-area="" asp-controller="Test" asp-action="ShowTestsToUser">Tests</a>
     </li>
 }

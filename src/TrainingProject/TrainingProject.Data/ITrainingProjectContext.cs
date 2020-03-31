@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,6 +18,7 @@ namespace TrainingProject.Data
         DbSet<AnswerText> AnswersTexts { get; set; }
         DbSet<UserAnswerOption> UserAnswerOptions { get; set; }
 
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken); 
+        ChangeTracker ChangeTracker { get; }
     }
 }

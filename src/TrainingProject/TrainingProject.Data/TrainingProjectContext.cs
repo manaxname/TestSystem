@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Threading;
 using System.Threading.Tasks;
 using TrainingProject.Data.Models;
@@ -38,6 +39,8 @@ namespace TrainingProject.Data
                 .HasForeignKey<AnswerText>(x => x.QuestionId);
 
             modelBuilder.Entity<UserAnswerOption>()
+                .HasKey(x => new { x.UserId, x.AnswerOptionId });
+            modelBuilder.Entity<UserAnswerOption>()
                 .HasOne<User>(x => x.User)
                 .WithMany(x => x.UserAnswerOptions)
                 .HasForeignKey(x => x.UserId);
@@ -45,13 +48,18 @@ namespace TrainingProject.Data
                .HasOne<AnswerOption>(x => x.AnswerOption)
                .WithMany(x => x.UserAnswerOptions)
                .HasForeignKey(x => x.AnswerOptionId);
+
         }
+
+        public override ChangeTracker ChangeTracker => base.ChangeTracker;
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.SaveChanges();
-            return Task.FromResult(result);
-            //return base.SaveChangesAsync(cancellationToken);
+            //base.SaveChangesAsync(cancellationToken);
+            //var result = base.SaveChanges();
+            ////return Task.FromResult(result);
+
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -1,0 +1,88 @@
+﻿@model IEnumerable<TrainingProject.Web.Models.AnswerOptionModel>
+
+@{
+    ViewData["Title"] = "Start Test";
+
+    int testId = 0;
+    if (ViewData.ContainsKey("TestId"))
+    {
+        int.TryParse(ViewData["TestId"].ToString(), out testId);
+    }
+
+    int userId = 0;
+    if (ViewData.ContainsKey("UserId"))
+    {
+        int.TryParse(ViewData["UserId"].ToString(), out userId);
+    }
+
+    int currQuestionId = 0;
+    if (ViewData.ContainsKey("CurrQuestionId"))
+    {
+        int.TryParse(ViewData["CurrQuestionId"].ToString(), out currQuestionId);
+    }
+
+    string currQuestionText = string.Empty;
+    if (ViewData.ContainsKey("CurrQuestionText"))
+    {
+        currQuestionText = ViewData["CurrQuestionText"].ToString();
+    }
+
+    int currQuestionStage = 0;
+    if (ViewData.ContainsKey("CurrQuestionStage"))
+    {
+        int.TryParse(ViewData["CurrQuestionStage"].ToString(), out currQuestionStage);
+    }
+
+    int prevQuestionId = 0;
+    if (ViewData.ContainsKey("PrevQuestionId"))
+    {
+        int.TryParse(ViewData["PrevQuestionId"].ToString(), out prevQuestionId);
+    }
+
+    int prevQuestionStage = 0;
+    if (ViewData.ContainsKey("PrevQuestionStage"))
+    {
+        int.TryParse(ViewData["PrevQuestionStage"].ToString(), out prevQuestionStage);
+    }
+}
+
+
+<div id="results">
+    <h4>@currQuestionText</h4>
+    <form asp-action="StartTest" asp-controller="Test"
+          data-ajax="true" data-ajax-method="POST"
+          data-ajax-mode="replace" data-ajax-update="#results"
+          data-ajax-success="success">
+
+        @foreach (var item in Model)
+        {
+            <div class="form-group">
+                <input id="@item.Id" name="@item.Id" type="checkbox">
+                <span></span>
+                @item.Text
+            </div>
+        }
+
+        <div class="form-group">
+            <input type="hidden" asp-for="@testId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@userId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@currQuestionId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@currQuestionStage" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@prevQuestionId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@prevQuestionStage" />
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Next" class="btn btn-primary" />
+        </div>
+    </form>
+</div>

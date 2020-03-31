@@ -23,9 +23,7 @@ namespace TrainingProject.Domain.Logic.Mappers
     {
         public DataDomainProfile()
         {
-            CreateMap<DataUser, DomainUser>()
-                .ReverseMap();
-
+            CreateMap<DataUser, DomainUser>().ReverseMap();
             CreateMap<DataTest, DomainTest>().ReverseMap();
             CreateMap<DataQuestion, DomainQuestion>().ReverseMap();
             CreateMap<DataAnswerOption, DomainAnswerOption>().ReverseMap();

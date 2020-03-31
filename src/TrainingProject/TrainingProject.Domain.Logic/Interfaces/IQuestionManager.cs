@@ -13,6 +13,8 @@ namespace TrainingProject.Domain.Logic.Interfaces
         IEnumerable<Question> GetQuestionsByTestId(int testId);
         string GetQuestionTypeById(int id);
         string GetQuestionTextById(int id);
+        int GetQuestionCountByTestId(int testId);
+        Question GetRandomQuestionInTestByStage(int testId, int stage);
         void DeleteQuestion(int id);
     }
 }

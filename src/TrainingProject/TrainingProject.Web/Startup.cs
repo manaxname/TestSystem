@@ -69,7 +69,6 @@ namespace TrainingProject.Web
                 });
             services.AddAuthorization(opts => {
                 opts.AddPolicy("OnlyForAdmins", policy => {
-                    //policy.RequireClaim("role", UserRoles.Admin);
                     policy.RequireRole(UserRoles.Admin);
                 });
                 opts.AddPolicy("OnlyForUsers", policy => {

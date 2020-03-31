@@ -1,6 +1,26 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+
+    var testId = 123;
 }
+
+
+<script>
+    //debugger;
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelector("#demo").innerHTML = "Hello JavaScript!";
+    });
+
+    function myFunction() {
+        document.getElementById("demo2").innerHTML = "FFFFFFFFFFF";
+    }
+</script>
+
+
+<button onclick="myFunction()">Try it</button>
+
+<h1 id="demo">HFHGFH</h1>
+<h1 id="demo2">HFHGFH</h1>
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>

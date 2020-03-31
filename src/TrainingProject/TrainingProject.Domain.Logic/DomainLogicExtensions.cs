@@ -19,11 +19,6 @@ namespace TrainingProject.Domain.Logic
             services.AddTransient<IQuestionManager, QuestionManager>();
             services.AddTransient<IAnswersManager, AnswersManager>();
 
-            //services.AddSingleton(provider => new MapperConfiguration(cfg =>
-            //{
-            //    cfg.AddProfile(new DataDomainProfile());
-            //}).CreateMapper());
-
             return services;
         }
     }

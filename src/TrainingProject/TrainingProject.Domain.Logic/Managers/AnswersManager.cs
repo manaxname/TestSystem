@@ -14,6 +14,7 @@ using DataUser = TrainingProject.Data.Models.User;
 using DomainUser = TrainingProject.Domain.Models.User;
 using DataUserAnswerOption = TrainingProject.Data.Models.UserAnswerOption;
 using DomainUserAnswerOption = TrainingProject.Domain.Models.UserAnswerOption;
+using Microsoft.EntityFrameworkCore;
 
 namespace TrainingProject.Domain.Logic.Managers
 {
@@ -55,7 +56,31 @@ namespace TrainingProject.Domain.Logic.Managers
 
         public int CreateUserAnswerOption(DomainUserAnswerOption userAnswerOption)
         {
-            throw new NotImplementedException();
+            if (!this.IsAnswerOptionExists(userAnswerOption.AnswerOptionId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "AnswerOption doesn't exist.");
+            }
+
+            if (this.IsUserAnswerOptionExists(userAnswerOption.UserId, userAnswerOption.Id))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "UserAnswerOption already exists.");
+            }
+
+            var dataUserAnswerOption = _mapper.Map<DataUserAnswerOption>(userAnswerOption);
+
+            _tpContext.UserAnswerOptions.Add(dataUserAnswerOption);
+
+            return _tpContext.SaveChangesAsync(default).Result;
+        }
+
+        public int CreateUserAnswerOptions(IEnumerable<DomainUserAnswerOption> userAnswerOptions)
+        {
+            _tpContext.UserAnswerOptions.AddRange(
+                userAnswerOptions.Select(x => _mapper.Map<DataUserAnswerOption>(x)));
+
+            return _tpContext.SaveChangesAsync(default).Result;
         }
 
         public void DeleteAnswerOption(int id)
@@ -78,6 +103,18 @@ namespace TrainingProject.Domain.Logic.Managers
             return domainAnswerOption;
         }
 
+        public int GetAnswerOptionCountByQuestionId(int questionId)
+        {
+            if (!_qusetionManager.IsQuestionExists(questionId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "Question doesn't exist.");
+            }
+
+            return _tpContext.AnswersOptions
+                .Count(answerOption => answerOption.QuestionId == questionId);
+        }
+
         public IEnumerable<DomainAnswerOption> GetAnswerOptionsByQuestionId(int questionId)
         {
             if (!_qusetionManager.IsQuestionExists(questionId))
@@ -98,9 +135,32 @@ namespace TrainingProject.Domain.Logic.Managers
             return domainAnswerOptions;
         }
 
+        public DomainUserAnswerOption GetUserAnswerOptionByIds(int userId, int answerOptionId)
+        {
+            if (!this.IsUserAnswerOptionExists(userId, answerOptionId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "UserAnswerOption does't exist.");
+            }
+
+            var dataUserAnswerOption = _tpContext.UserAnswerOptions
+                .First(userAnswerOption => userAnswerOption.UserId == userId && 
+                    userAnswerOption.AnswerOptionId == answerOptionId);
+
+            var domainUserAnswerOption = _mapper.Map<DomainUserAnswerOption>(dataUserAnswerOption);
+
+            return domainUserAnswerOption;
+        }
+
         public bool IsAnswerOptionExists(int id)
         {
             return _tpContext.AnswersOptions.Any(answersOptions => answersOptions.Id == id);
+        }
+
+        public bool IsUserAnswerOptionExists(int userId, int answerOptionId)
+        {
+            return _tpContext.UserAnswerOptions.Any(userAnswersOptions => userAnswersOptions.UserId == userId) &&
+                   _tpContext.AnswersOptions.Any(answersOptions => answersOptions.Id == answerOptionId);
         }
     }
 }

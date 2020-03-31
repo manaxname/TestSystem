@@ -29,7 +29,6 @@ namespace TrainingProject.Data.Tests
             _userManager.CreateUser(domainUser);
         }
 
-
         [TestCase("email1", "pasw1", "role1")]
         [TestCase("email2", "pasw2", "role2")]
         [TestCase("email3", "pasw3", "role3")]
