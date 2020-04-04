@@ -14,6 +14,7 @@ namespace TrainingProject.Domain.Logic.Interfaces
         string GetQuestionTypeById(int id);
         string GetQuestionTextById(int id);
         int GetQuestionCountByTestId(int testId);
+        IEnumerable<int> GetTestStagesByTestId(int testId);
         Question GetRandomQuestionInTestByStage(int testId, int stage);
         void DeleteQuestion(int id);
     }

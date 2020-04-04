@@ -4,13 +4,12 @@
     ViewData["Title"] = "Tests";
 }
 
-<h4>Tests</h4>
-
 <table class="table">
     <thead>
+    <h4>Tests</h4>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Id)
+                Number
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Name)
@@ -19,18 +18,19 @@
         </tr>
     </thead>
     <tbody>
-    @foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.Id }, new { @class = "btn btn-primary" })
-            </td>
-        </tr>
-    }
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.Id }, new { @class = "btn btn-primary" })
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

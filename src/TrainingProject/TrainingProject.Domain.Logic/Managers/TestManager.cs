@@ -51,7 +51,7 @@ namespace TrainingProject.Domain.Logic.Managers
 
             return domainTest;
         }
-        
+
         public IEnumerable<DomainTest> GetTests()
         {
             var domainTests = _tpContext.Tests.Select(test => _mapper.Map<DomainTest>(test));

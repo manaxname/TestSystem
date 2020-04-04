@@ -167,6 +167,17 @@ namespace TrainingProject.Domain.Logic.Managers
             return domainQuestion;
         }
 
+        public IEnumerable<int> GetTestStagesByTestId(int testId)
+        {
+            if (!_testManager.IsTestExists(testId))
+            {
+                // TODO: Custom Exception here.
+                throw new Exception(message: "Test does't exist.");
+            }
+
+            return _tpContext.Questions.GroupBy(x => x.Stage).Select(x => x.Key);
+        }
+
         public bool IsQuestionExists(int id)
         {
             return _tpContext.Questions.Any(question => question.Id == id);

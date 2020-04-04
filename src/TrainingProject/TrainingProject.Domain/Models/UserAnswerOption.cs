@@ -10,6 +10,8 @@ namespace TrainingProject.Domain.Models
         public bool isValid { get; set; }
 
         public int UserId { get; set; }
+        public User User { get; set; }
         public int AnswerOptionId { get; set; }
+        public AnswerOption AnswerOption { get; set; }
     }
 }

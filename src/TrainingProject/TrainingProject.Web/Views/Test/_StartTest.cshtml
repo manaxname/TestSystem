@@ -1,91 +1,141 @@
-﻿@model IEnumerable<TrainingProject.Web.Models.AnswerOptionModel>
-
-@{
+﻿@{
     ViewData["Title"] = "Start Test";
 
-    int testId = 0;
+    int TestId = 0;
     if (ViewData.ContainsKey("TestId"))
     {
-        int.TryParse(ViewData["TestId"].ToString(), out testId);
+        int.TryParse(ViewData["TestId"].ToString(), out TestId);
     }
 
-    int userId = 0;
+    int UserId = 0;
     if (ViewData.ContainsKey("UserId"))
     {
-        int.TryParse(ViewData["UserId"].ToString(), out userId);
+        int.TryParse(ViewData["UserId"].ToString(), out UserId);
     }
 
-    int currQuestionId = 0;
-    if (ViewData.ContainsKey("CurrQuestionId"))
-    {
-        int.TryParse(ViewData["CurrQuestionId"].ToString(), out currQuestionId);
-    }
+    string CurrQuestionText =
+        CurrQuestionText = ViewData["CurrQuestionText"].ToString();
 
-    string currQuestionText = string.Empty;
-    if (ViewData.ContainsKey("CurrQuestionText"))
-    {
-        currQuestionText = ViewData["CurrQuestionText"].ToString();
-    }
-
-    int currQuestionStage = 0;
+    int CurrQuestionStage = 0;
     if (ViewData.ContainsKey("CurrQuestionStage"))
     {
-        int.TryParse(ViewData["CurrQuestionStage"].ToString(), out currQuestionStage);
+        int.TryParse(ViewData["CurrQuestionStage"].ToString(), out CurrQuestionStage);
     }
 
-    int prevQuestionId = 0;
-    if (ViewData.ContainsKey("PrevQuestionId"))
+    int StagesCount = 0;
+    if (ViewData.ContainsKey("StagesCount"))
     {
-        int.TryParse(ViewData["PrevQuestionId"].ToString(), out prevQuestionId);
+        int.TryParse(ViewData["StagesCount"].ToString(), out StagesCount);
     }
 
-    int prevQuestionStage = 0;
-    if (ViewData.ContainsKey("PrevQuestionStage"))
+    int CurrQuestionId = 0;
+    if (ViewData.ContainsKey("CurrQuestionId"))
     {
-        int.TryParse(ViewData["PrevQuestionStage"].ToString(), out prevQuestionStage);
+        int.TryParse(ViewData["CurrQuestionId"].ToString(), out CurrQuestionId);
     }
 
+    string QuestionIds = ViewData["QuestionIds"].ToString();
 
-    //if(currQuestionStage == 1) Layout = "_Layout";
+    var currQuestionUserAnswersOptions =
+        (IEnumerable<TrainingProject.Web.Models.UserAnswerOptionModel>)
+        ViewData["CurrQuestionUserAnswersOptions"];
+
+    string dangerClass = string.Empty;
+    @if (ViewData["SubmitButton1"].ToString() == "Finish")
+    {
+        dangerClass = "btn btn-danger";
+    }
+
+    var questionIds = QuestionIds
+       .Split(",")
+       .Select(x => int.Parse(x));
+
+    string currentClass = "btn btn-dark";
+    int stage = 1;
 }
 
-
 <div id="results">
-    <h4>@currQuestionText</h4>
+    <h4>@CurrQuestionStage / @StagesCount</h4>
     <form asp-action="StartTest" asp-controller="Test"
           data-ajax="true" data-ajax-method="POST"
           data-ajax-mode="replace" data-ajax-update="#results"
           data-ajax-success="success">
 
-        @foreach (var item in Model)
+        @foreach (var item in questionIds)
         {
-            <div class="form-group">
-                <input id="@item.Id" name="@item.Id" type="checkbox">
-                <span></span>
-                @item.Text
-            </div>
+            if (stage == CurrQuestionStage)
+            {
+                <input type="submit"
+                       name="submitButton@(item)"
+                       value="@(stage++)" class="btn btn-primary @currentClass" />
+            }
+            else
+            {
+                <input type="submit"
+                       name="submitButton@(item)"
+                       value="@(stage++)" class="btn btn-primary" />
+            }
+        }
+
+        <h4>@CurrQuestionText</h4>
+
+        @foreach (var item in currQuestionUserAnswersOptions)
+        {
+            if (item.isValid)
+            {
+                <div class="form-group">
+                    <input data-val="true"
+                           id="@item.AnswerOptionId"
+                           name="@item.AnswerOptionId"
+                           type="checkbox"
+                           value="true"
+                           checked />
+                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
+                    <span></span>
+                    @item.AnswerOption.Text
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <input data-val="true"
+                           id="@item.AnswerOptionId"
+                           name="@item.AnswerOptionId"
+                           type="checkbox"
+                           value="true" />
+                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
+                    <span></span>
+                    @item.AnswerOption.Text
+                </div>
+            }
         }
 
         <div class="form-group">
-            <input type="hidden" asp-for="@testId" />
+            <input type="hidden" asp-for="@TestId" />
         </div>
         <div class="form-group">
-            <input type="hidden" asp-for="@userId" />
+            <input type="hidden" asp-for="@StagesCount" />
         </div>
         <div class="form-group">
-            <input type="hidden" asp-for="@currQuestionId" />
+            <input type="hidden" asp-for="@UserId" />
         </div>
         <div class="form-group">
-            <input type="hidden" asp-for="@currQuestionStage" />
+            <input type="hidden" asp-for="@CurrQuestionStage" />
+        </div>
+
+        <div class="form-group">
+            <input type="hidden" asp-for="@QuestionIds" />
         </div>
         <div class="form-group">
-            <input type="hidden" asp-for="@prevQuestionId" />
+            <input type="hidden" asp-for="@CurrQuestionId" />
         </div>
+
         <div class="form-group">
-            <input type="hidden" asp-for="@prevQuestionStage" />
-        </div>
-        <div class="form-group">
-            <input type="submit" value="Next" class="btn btn-primary" />
+            @if (!string.IsNullOrWhiteSpace(ViewData["SubmitButton2"].ToString()))
+            {
+                <input type="submit" name="submitButton" value="@ViewData["SubmitButton2"]" class="btn btn-primary" />
+            }
+            <input type="submit" name="submitButton" value="@ViewData["SubmitButton1"]" class="btn btn-primary @dangerClass" />
         </div>
     </form>
 </div>

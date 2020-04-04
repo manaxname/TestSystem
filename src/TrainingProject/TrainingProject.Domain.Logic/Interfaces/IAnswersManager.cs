@@ -12,9 +12,11 @@ namespace TrainingProject.Domain.Logic.Interfaces
         int CreateUserAnswerOptions(IEnumerable<UserAnswerOption> userAnswerOptions);
         AnswerOption GetAnswerOptionById(int id);
         UserAnswerOption GetUserAnswerOptionByIds(int userId, int answerOptionId);
+        IEnumerable<UserAnswerOption> GetUserAnswerOptionsByQuestionId(int userId, int questionId);
         IEnumerable<AnswerOption> GetAnswerOptionsByQuestionId(int questionId);
         void DeleteAnswerOption(int id);
         bool IsAnswerOptionExists(int id);
         bool IsUserAnswerOptionExists(int userId, int answerOptionId);
+        int SetUserAnswerOptionValid(int userId, int answerOptionId, bool isValid);
     }
 }

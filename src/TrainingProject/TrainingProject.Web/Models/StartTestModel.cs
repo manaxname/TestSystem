@@ -7,29 +7,15 @@ namespace TrainingProject.Web.Models
 {
     public class StartTestModel
     {
-        public int QuestionNumber { get; private set; }
-        public int TotalQuestions { get; private set; }
+        public int TestId { get; set; }
+        public int UserId { get; set; }
+        public int StagesCount { get; set; }
 
-        public StartTestModel(int questionNumber, int totalQuestions)
-        {
-            QuestionNumber = questionNumber;
-            TotalQuestions = totalQuestions;
-        }
+        public string CurrQuestionText { get; set; }
+        public int CurrQuestionStage { get; set; }
 
-        public bool HasPreviousQuestion
-        {
-            get
-            {
-                return (QuestionNumber > 1);
-            }
-        }
-
-        public bool HasNextQuestion
-        {
-            get
-            {
-                return (QuestionNumber < TotalQuestions);
-            }
-        }
+        public IEnumerable<UserAnswerOptionModel> CurrQuestionUserAnswersOptions { get; set; }
+        public string QuestionIds { get; set; }
+        public int CurrQuestionId { get; set; }
     }
 }

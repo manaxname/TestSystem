@@ -152,6 +152,17 @@ namespace TrainingProject.Domain.Logic.Managers
             return domainUserAnswerOption;
         }
 
+        public IEnumerable<DomainUserAnswerOption> GetUserAnswerOptionsByQuestionId(int userId, int questionId)
+        {
+            IEnumerable<DomainUserAnswerOption> domainUserAnswerOptions;
+
+            domainUserAnswerOptions = _tpContext.UserAnswerOptions.Include(x => x.AnswerOption)
+                .Where(x => x.UserId == userId && x.AnswerOption.QuestionId == questionId)
+                .Select(x => _mapper.Map<DomainUserAnswerOption>(x));
+
+            return domainUserAnswerOptions;
+        }
+
         public bool IsAnswerOptionExists(int id)
         {
             return _tpContext.AnswersOptions.Any(answersOptions => answersOptions.Id == id);
@@ -161,6 +172,17 @@ namespace TrainingProject.Domain.Logic.Managers
         {
             return _tpContext.UserAnswerOptions.Any(userAnswersOptions => userAnswersOptions.UserId == userId) &&
                    _tpContext.AnswersOptions.Any(answersOptions => answersOptions.Id == answerOptionId);
+        }
+
+        public int SetUserAnswerOptionValid(int userId, int answerOptionId, bool isValid)
+        {
+            var dataUserAnswerOption = _tpContext.UserAnswerOptions.FirstOrDefault(x => x.UserId == userId && x.AnswerOptionId == answerOptionId);
+
+            dataUserAnswerOption.isValid = isValid;
+
+            _tpContext.UserAnswerOptions.Update(dataUserAnswerOption);
+
+            return _tpContext.SaveChangesAsync(default).Result;
         }
     }
 }
