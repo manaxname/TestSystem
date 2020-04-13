@@ -8,12 +8,12 @@ using TrainingProject.Domain.Logic.Interfaces;
 using TrainingProject.Domain.Models;
 using DataAnswerOption = TrainingProject.Data.Models.AnswerOption;
 using DomainAnswerOption = TrainingProject.Domain.Models.AnswerOption;
-using DataAnswerText = TrainingProject.Data.Models.AnswerText;
-using DomainAnswerText = TrainingProject.Domain.Models.AnswerText;
 using DataUser = TrainingProject.Data.Models.User;
 using DomainUser = TrainingProject.Domain.Models.User;
 using DataUserAnswerOption = TrainingProject.Data.Models.UserAnswerOption;
 using DomainUserAnswerOption = TrainingProject.Domain.Models.UserAnswerOption;
+using DataQuestion = TrainingProject.Data.Models.Question;
+using DomainQuestion = TrainingProject.Domain.Models.Question;
 using Microsoft.EntityFrameworkCore;
 
 namespace TrainingProject.Domain.Logic.Managers
@@ -62,7 +62,7 @@ namespace TrainingProject.Domain.Logic.Managers
                 throw new Exception(message: "AnswerOption doesn't exist.");
             }
 
-            if (this.IsUserAnswerOptionExists(userAnswerOption.UserId, userAnswerOption.Id))
+            if (this.IsUserAnswerOptionExists(userAnswerOption.UserId, userAnswerOption.AnswerOptionId))
             {
                 // TODO: Custom Exception here.
                 throw new Exception(message: "UserAnswerOption already exists.");
@@ -170,8 +170,7 @@ namespace TrainingProject.Domain.Logic.Managers
 
         public bool IsUserAnswerOptionExists(int userId, int answerOptionId)
         {
-            return _tpContext.UserAnswerOptions.Any(userAnswersOptions => userAnswersOptions.UserId == userId) &&
-                   _tpContext.AnswersOptions.Any(answersOptions => answersOptions.Id == answerOptionId);
+            return _tpContext.UserAnswerOptions.Any(x => x.UserId == userId && x.AnswerOptionId == answerOptionId);
         }
 
         public int SetUserAnswerOptionValid(int userId, int answerOptionId, bool isValid)

@@ -2,6 +2,24 @@
 
 @{
     ViewData["Title"] = "Create Answer";
+
+    int testId = 0;
+    if (ViewData.ContainsKey("TestId"))
+    {
+        int.TryParse(ViewData["TestId"].ToString(), out testId);
+    }
+
+    int questionId = 0;
+    if (ViewData.ContainsKey("QuestionId"))
+    {
+        int.TryParse(ViewData["QuestionId"].ToString(), out questionId);
+    }
+
+    string questionType = string.Empty;
+    if (ViewData.ContainsKey("QuestionType"))
+    {
+        questionType = ViewData["QuestionType"].ToString();
+    }
 }
 
 <h4>Create Answer</h4>
@@ -45,6 +63,6 @@
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    @Html.ActionLink("Back to Answers", "EditQuestion", "Test", 
+        new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-secondary" })
 </div>
-

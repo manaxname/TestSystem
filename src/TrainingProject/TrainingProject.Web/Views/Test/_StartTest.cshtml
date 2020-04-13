@@ -41,7 +41,7 @@
         ViewData["CurrQuestionUserAnswersOptions"];
 
     string dangerClass = string.Empty;
-    @if (ViewData["SubmitButton1"].ToString() == "Finish")
+    @if (ViewData["SubmitButton_1"].ToString() == "Finish")
     {
         dangerClass = "btn btn-danger";
     }
@@ -66,13 +66,13 @@
             if (stage == CurrQuestionStage)
             {
                 <input type="submit"
-                       name="submitButton@(item)"
+                       name="SubmitButton@(item)"
                        value="@(stage++)" class="btn btn-primary @currentClass" />
             }
             else
             {
                 <input type="submit"
-                       name="submitButton@(item)"
+                       name="SubmitButton@(item)"
                        value="@(stage++)" class="btn btn-primary" />
             }
         }
@@ -131,11 +131,12 @@
         </div>
 
         <div class="form-group">
-            @if (!string.IsNullOrWhiteSpace(ViewData["SubmitButton2"].ToString()))
+            @if (!string.IsNullOrWhiteSpace(ViewData["SubmitButton_2"].ToString()))
             {
-                <input type="submit" name="submitButton" value="@ViewData["SubmitButton2"]" class="btn btn-primary" />
+                <input type="submit" name="SubmitButton_2" id="SubmitButton_2" value="@ViewData["SubmitButton_2"]" class="btn btn-primary" />
             }
-            <input type="submit" name="submitButton" value="@ViewData["SubmitButton1"]" class="btn btn-primary @dangerClass" />
+
+            <input type="submit" name="SubmitButton_1" id="SubmitButton_1" value="@ViewData["SubmitButton_1"]" class="btn btn-primary @dangerClass" />
         </div>
     </form>
 </div>

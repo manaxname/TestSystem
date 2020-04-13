@@ -14,7 +14,6 @@ namespace TrainingProject.Data.Models
         public string QuestionType { get; set; }
 
         public int TestId { get; set; }
-        public ICollection<AnswerOption> AnswersOption { get; set; }
-        public AnswerText AnswersText { get; set; }
+        public ICollection<AnswerOption> AnswersOptions { get; set; }
     }
 }

@@ -61,11 +61,11 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.Text)
                 </td>
-                <td>
-                    @*@Html.ActionLink("Edit", "EditAnswer", "Test",
-                        new { @TestId = item.Id, @QuestionId = item.Id, @QuestionType = questionType,  @AnswerId = item.Id }, new { @class = "btn btn-primary" })*@
-                </td>
             </tr>
         }
     </tbody>
 </table>
+
+<div>
+    @Html.ActionLink("Back to Questions", "EditTest", "Test", new { @TestId = testId }, new { @class = "btn btn-secondary" })
+</div>

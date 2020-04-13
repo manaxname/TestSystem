@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TrainingProject.Web.Models.TestModel>
+﻿@model IEnumerable<TrainingProject.Web.Models.UserTestModel>
 
 @{
     ViewData["Title"] = "Tests";
@@ -9,28 +9,42 @@
     <h4>Tests</h4>
         <tr>
             <th>
-                Number
+                @Html.DisplayNameFor(model => model.TestName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayNameFor(model => model.Status)
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.TestName)
+            </td>
+
+            @if (item.Status == TestStatus.NotStarted)
+            {
                 <td>
-                    @Html.DisplayFor(modelItem => item.Id)
+                    Not Started
+                    @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
                 </td>
+            }
+            else if (item.Status == TestStatus.NotFinished)
+            {
                 <td>
-                    @Html.DisplayFor(modelItem => item.Name)
+                    Not Finished
+                    @Html.ActionLink("Continue", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
                 </td>
+            }
+            else if (item.Status == TestStatus.Finished)
+            {
                 <td>
-                    @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.Id }, new { @class = "btn btn-primary" })
+                    Finished, Your points: @item.Points
                 </td>
-            </tr>
+            }
+        </tr>
         }
     </tbody>
 </table>

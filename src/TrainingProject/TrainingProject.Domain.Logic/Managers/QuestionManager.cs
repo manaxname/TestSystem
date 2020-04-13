@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -175,12 +176,42 @@ namespace TrainingProject.Domain.Logic.Managers
                 throw new Exception(message: "Test does't exist.");
             }
 
-            return _tpContext.Questions.GroupBy(x => x.Stage).Select(x => x.Key);
+            var questions = GetQuestionsByTestId(testId)
+                .GroupBy(x => x.Stage)
+                .Select(x => x.Key);
+
+            return questions;
         }
 
         public bool IsQuestionExists(int id)
         {
             return _tpContext.Questions.Any(question => question.Id == id);
+        }
+
+        public IEnumerable<DomainQuestion> GetUserQuestionsByTestId(int userId, int testId)
+        {
+            var dataQuestions = _tpContext.Questions
+                .Where(x => x.TestId == testId)
+                .Include(x => x.AnswersOptions)
+                    .ThenInclude(x => x.UserAnswerOptions);
+
+            var questions = new Dictionary<int, DomainQuestion>();
+
+            foreach (var question in dataQuestions)
+            {
+                foreach (var answerOption in question.AnswersOptions)
+                {
+                    foreach (var item in answerOption.UserAnswerOptions)
+                    {
+                        if (item.UserId == userId && !questions.ContainsKey(question.Id))
+                        {
+                            questions.Add(question.Id, _mapper.Map<DomainQuestion>(question));
+                        }
+                    }
+                }
+            }
+
+            return questions.Values;
         }
     }
 }

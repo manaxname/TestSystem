@@ -1,29 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using TrainingProject.Common;
-using TrainingProject.Data;
 using TrainingProject.Domain.Logic;
 using TrainingProject.Domain.Logic.Interfaces;
 using TrainingProject.Domain.Logic.Mappers;
-using TrainingProject.Web.Controllers;
-using DomainUser = TrainingProject.Domain.Models.User;
 
 namespace TrainingProject.Web
 {
@@ -41,25 +28,23 @@ namespace TrainingProject.Web
         {
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDomainServices(connectionString);
+
             services.AddSingleton(provider => new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new DomainViewProfile());
                 cfg.AddProfile(new DataDomainProfile());
             }).CreateMapper());
 
-
             services.AddOpenApiDocument();
             services.AddControllers();
             services.AddControllersWithViews();
             services.AddRazorPages();
-
 
             services.AddDistributedMemoryCache();
             services.AddSession(options => {
                 options.IdleTimeout = TimeSpan.FromMinutes(int.MaxValue);
             });
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -83,6 +68,7 @@ namespace TrainingProject.Web
 
             var serviceProvider = services.BuildServiceProvider();
             var userManager = serviceProvider.GetRequiredService<IUserManager>();
+
             if (!userManager.IsUserExists(adminEmail))
             {
                 userManager.CreateUser(adminEmail, adminPassword, adminRole);

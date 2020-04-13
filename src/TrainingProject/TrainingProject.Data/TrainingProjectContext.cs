@@ -18,8 +18,8 @@ namespace TrainingProject.Data
         public DbSet<Test> Tests { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<AnswerOption> AnswersOptions { get; set; }
-        public DbSet<AnswerText> AnswersTexts { get; set; }
         public DbSet<UserAnswerOption> UserAnswerOptions { get; set; }
+        public DbSet<UserTest> UserTests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,14 +29,9 @@ namespace TrainingProject.Data
                 .HasForeignKey(x => x.TestId);
 
             modelBuilder.Entity<Question>()
-                .HasMany(x => x.AnswersOption)
+                .HasMany(x => x.AnswersOptions)
                 .WithOne()
                 .HasForeignKey(x => x.QuestionId);
-
-            modelBuilder.Entity<Question>()
-                .HasOne<AnswerText>(x => x.AnswersText)
-                .WithOne(x => x.Question)
-                .HasForeignKey<AnswerText>(x => x.QuestionId);
 
             modelBuilder.Entity<UserAnswerOption>()
                 .HasKey(x => new { x.UserId, x.AnswerOptionId });
@@ -49,16 +44,20 @@ namespace TrainingProject.Data
                .WithMany(x => x.UserAnswerOptions)
                .HasForeignKey(x => x.AnswerOptionId);
 
+            modelBuilder.Entity<UserTest>()
+                .HasKey(x => new { x.UserId, x.TestId });
+            modelBuilder.Entity<UserTest>()
+                .HasOne<User>(x => x.User)
+                .WithMany(x => x.UserTests)
+                .HasForeignKey(x => x.UserId);
+            modelBuilder.Entity<UserTest>()
+               .HasOne<Test>(x => x.Test)
+               .WithMany(x => x.UserTests)
+               .HasForeignKey(x => x.TestId);
         }
-
-        public override ChangeTracker ChangeTracker => base.ChangeTracker;
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            //base.SaveChangesAsync(cancellationToken);
-            //var result = base.SaveChanges();
-            ////return Task.FromResult(result);
-
             return base.SaveChangesAsync(cancellationToken);
         }
     }

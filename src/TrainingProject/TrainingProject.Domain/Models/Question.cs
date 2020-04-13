@@ -13,6 +13,7 @@ namespace TrainingProject.Domain.Models
         public int Points { get; set; }
         public string QuestionType { get; set; }
 
+        public ICollection<AnswerOption> AnswersOptions { get; set; }
         public int TestId { get; set; }
     }
 }

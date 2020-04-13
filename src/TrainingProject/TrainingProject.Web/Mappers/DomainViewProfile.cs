@@ -6,8 +6,8 @@ using DomainTest = TrainingProject.Domain.Models.Test;
 using DomainQuestion = TrainingProject.Domain.Models.Question;
 using DomainAnswerOption = TrainingProject.Domain.Models.AnswerOption;
 using DomainUserAnswerOption = TrainingProject.Domain.Models.UserAnswerOption;
+using DomainUserTest = TrainingProject.Domain.Models.UserTest;
 
-using DomainAnswerText = TrainingProject.Domain.Models.AnswerText;
 using TrainingProject.Web.Models;
 
 namespace TrainingProject.Domain.Logic.Mappers
@@ -29,6 +29,9 @@ namespace TrainingProject.Domain.Logic.Mappers
                 .ReverseMap();
 
             CreateMap<DomainUserAnswerOption, UserAnswerOptionModel>().ReverseMap();
+            CreateMap<DomainUserTest, UserTestModel>()
+                .ForMember(dest => dest.TestName, opt => opt.MapFrom(map => map.Test.Name))
+                .ReverseMap();
         }
     }
 }

@@ -12,6 +12,17 @@
     int stage = 1;
 }
 
+<div>Time to finish test: <span id="time">@(Model.SecondsLeft / 60)</span></div>
+<script>
+    window.onload = function () {
+        var seconds = @Model.SecondsLeft;
+        var display = document.querySelector('#time');
+        var getUrl = "EndTest?userId=@Model.UserId&testId=@Model.TestId";
+        var redirectUrl = "Home/Index";
+        startTimer(seconds, display, getUrl, redirectUrl);
+    };
+</script>
+    
 <div id="results">
     <h4>@Model.CurrQuestionStage / @Model.StagesCount</h4>
     <form asp-action="StartTest" asp-controller="Test"
@@ -24,13 +35,13 @@
             if (stage == Model.CurrQuestionStage)
             {
                 <input type="submit"
-                       name="submitButton@(item)"
+                       name="SubmitButton@(item)"
                        value="@(stage++)" class="btn btn-primary @currentClass" />
             }
             else
             {
                 <input type="submit"
-                       name="submitButton@(item)"
+                       name="SubmitButton@(item)"
                        value="@(stage++)" class="btn btn-primary" />
             }
         }
@@ -39,16 +50,33 @@
 
         @foreach (var item in Model.CurrQuestionUserAnswersOptions)
         {
-            <div class="form-group">
-                <input data-val="true"
-                       id="@item.AnswerOptionId"
-                       name="@item.AnswerOptionId"
-                       type="checkbox"
-                       value="true" />
-                <input name="@item.AnswerOptionId" type="hidden" value="false" />
-                <span></span>
-                @item.AnswerOption.Text
-            </div>
+            if (item.isValid)
+            {
+                <div class="form-group">
+                    <input data-val="true"
+                           id="@item.AnswerOptionId"
+                           name="@item.AnswerOptionId"
+                           type="checkbox"
+                           value="true"
+                           checked />
+                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
+                    <span></span>
+                    @item.AnswerOption.Text
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <input data-val="true"
+                           id="@item.AnswerOptionId"
+                           name="@item.AnswerOptionId"
+                           type="checkbox"
+                           value="true" />
+                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
+                    <span></span>
+                    @item.AnswerOption.Text
+                </div>
+            }
         }
 
         <div class="form-group">
@@ -72,7 +100,9 @@
         </div>
 
         <div class="form-group">
-            <input type="submit" name="submitButton" value="@ViewData["SubmitButton1"]" class="btn btn-primary" />
+            <input type="submit" name="SubmitButton_1" id="SubmitButton_1" value="@ViewData["SubmitButton_1"]" class="btn btn-primary" />
         </div>
     </form>
 </div>
+
+

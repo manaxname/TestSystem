@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TrainingProject.Common;
-using TrainingProject.Domain.Logic;
 using TrainingProject.Domain.Logic.Interfaces;
 using TrainingProject.Web.Models;
 using DomainUser = TrainingProject.Domain.Models.User;
@@ -44,7 +43,7 @@ namespace TrainingProject.Web.Controllers
                 {
                     if (!_userManager.IsUserExists(model.Email))
                     {
-                        var id = _userManager.CreateUser(model.Email, model.Password, UserRoles.User);
+                        _userManager.CreateUser(model.Email, model.Password, UserRoles.User);
 
                         return RedirectToAction("Login", "Account");
                     }

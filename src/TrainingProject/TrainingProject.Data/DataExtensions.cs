@@ -10,7 +10,7 @@ namespace TrainingProject.Data
         {
             //configure your Data Layer services here
             services.AddDbContext<ITrainingProjectContext, TrainingProjectContext>(item => item.UseSqlServer(connectionString));
-
+            
             return services;
         }
     }

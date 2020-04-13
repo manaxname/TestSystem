@@ -1,5 +1,6 @@
 ﻿@model TrainingProject.Web.Models.QuestionModel
 
+
 <h4>Create Question</h4>
 <hr />
 <div class="row">
@@ -42,6 +43,5 @@
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    @Html.ActionLink("Back to Tests", "ShowTestsToAdmin", "Test", null, new { @class = "btn btn-secondary" })
 </div>
-

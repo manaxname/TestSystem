@@ -15,10 +15,9 @@ namespace TrainingProject.Data
         DbSet<Test> Tests { get; set; }
         DbSet<Question> Questions { get; set; }
         DbSet<AnswerOption> AnswersOptions { get; set; }
-        DbSet<AnswerText> AnswersTexts { get; set; }
         DbSet<UserAnswerOption> UserAnswerOptions { get; set; }
+        DbSet<UserTest> UserTests { get; set; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken); 
-        ChangeTracker ChangeTracker { get; }
     }
 }

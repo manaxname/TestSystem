@@ -12,5 +12,6 @@ namespace TrainingProject.Data.Models
         public string Role { get; set; }
 
         public ICollection<UserAnswerOption> UserAnswerOptions { get; set; }
+        public ICollection<UserTest> UserTests { get; set; }
     }
 }

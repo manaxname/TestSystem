@@ -17,5 +17,6 @@ namespace TrainingProject.Domain.Logic.Interfaces
         IEnumerable<int> GetTestStagesByTestId(int testId);
         Question GetRandomQuestionInTestByStage(int testId, int stage);
         void DeleteQuestion(int id);
+        public IEnumerable<Question> GetUserQuestionsByTestId(int userId, int testId);
     }
 }

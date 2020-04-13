@@ -19,18 +19,10 @@ namespace TrainingProject.Web.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult PartialAction()
-        {
-            return PartialView();
-        }
-
         [HttpPost]
-        public IActionResult Index(string submitButton)
+        public IActionResult Index2()
         {
-            var a = submitButton;
-
-            return View();
+            return View("index");
         }
     }
 }

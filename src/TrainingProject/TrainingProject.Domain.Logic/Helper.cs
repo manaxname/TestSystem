@@ -20,11 +20,12 @@ namespace TrainingProject.Domain.Logic
             return user;
         }
 
-        public static Test CreateDomainTest(string name)
+        public static Test CreateDomainTest(string name, int time)
         {
             var test = new Test
             {
                 Name = name,
+                Minutes = time
             };
 
             return test;
@@ -55,16 +56,7 @@ namespace TrainingProject.Domain.Logic
 
             return answerWithOption;
         }
-        public static AnswerText CreateDomainAnswerWithText(string text, int QuestionId)
-        {
-            var answerWithText = new AnswerText
-            {
-                Text = text,
-                QuestionId = QuestionId
-            };
 
-            return answerWithText;
-        }
         public static UserAnswerOption CreateDomainUserAnswerWithOption(int userId, int answerOptionId, bool isValid)
         {
             var userAnswerWithOption = new UserAnswerOption
@@ -75,6 +67,18 @@ namespace TrainingProject.Domain.Logic
             };
 
             return userAnswerWithOption;
+        }
+
+        public static UserTest CreateDomainUserTest(int userId, int testId, string status)
+        {
+            var userTest = new UserTest
+            {
+                UserId = userId,
+                TestId = testId,
+                Status = status
+            };
+
+            return userTest;
         }
     }
 }
