@@ -19,32 +19,33 @@
     <tbody>
         @foreach (var item in Model)
         {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.TestName)
-            </td>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TestName)
+                </td>
 
-            @if (item.Status == TestStatus.NotStarted)
-            {
+                @if (item.Status == TestStatus.NotStarted)
+                {
+                    <td>
+                        <span class="text-primary points-text-style">Not Started</span>
+                        @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                    </td>
+                }
+                else if (item.Status == TestStatus.NotFinished)
+                {
+                    <td>
+                        <span class="text-warning points-text-style">Not Finished</span>
+                        @Html.ActionLink("Continue", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                    </td>
+                }
+                else if (item.Status == TestStatus.Finished)
+                {
                 <td>
-                    Not Started
-                    @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                    <span class="text-success points-text-style">Finished</span>,
+                    Your points: <span class="points-text-style">@item.Points</span>
                 </td>
-            }
-            else if (item.Status == TestStatus.NotFinished)
-            {
-                <td>
-                    Not Finished
-                    @Html.ActionLink("Continue", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
-                </td>
-            }
-            else if (item.Status == TestStatus.Finished)
-            {
-                <td>
-                    Finished, Your points: @item.Points
-                </td>
-            }
-        </tr>
+                }
+            </tr>
         }
     </tbody>
 </table>

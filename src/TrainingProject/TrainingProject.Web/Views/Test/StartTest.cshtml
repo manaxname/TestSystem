@@ -8,11 +8,17 @@
         .Split(",")
         .Select(x => int.Parse(x));
 
+    string dangerClass = string.Empty;
+    @if (ViewData["SubmitButton_1"].ToString() == "Finish")
+    {
+        dangerClass = "btn btn-danger";
+    }
+
     string currentClass = "btn btn-dark";
     int stage = 1;
 }
 
-<div>Time to finish test: <span id="time">@(Model.SecondsLeft / 60)</span></div>
+<div>Time to finish test: <span id="time" class="text-primary">Loading...</span></div>
 <script>
     window.onload = function () {
         var seconds = @Model.SecondsLeft;
@@ -22,13 +28,14 @@
         startTimer(seconds, display, getUrl, redirectUrl);
     };
 </script>
-    
-<div id="results">
-    <h4>@Model.CurrQuestionStage / @Model.StagesCount</h4>
+
+<span id="results" class="d-flex justify-content-center">
     <form asp-action="StartTest" asp-controller="Test"
           data-ajax="true" data-ajax-method="POST"
           data-ajax-mode="replace" data-ajax-update="#results"
           data-ajax-success="success">
+
+        <h4>@Model.CurrQuestionStage / @Model.StagesCount</h4>
 
         @foreach (var item in questionIds)
         {
@@ -46,7 +53,7 @@
             }
         }
 
-        <h4>@Model.CurrQuestionText</h4>
+        <pre class="question-text-block"><span class="questionStyle">@Model.CurrQuestionText</span></pre>
 
         @foreach (var item in Model.CurrQuestionUserAnswersOptions)
         {
@@ -60,8 +67,7 @@
                            value="true"
                            checked />
                     <input name="@item.AnswerOptionId" type="hidden" value="false" />
-                    <span></span>
-                    @item.AnswerOption.Text
+                    <label asp-for="@item.AnswerOptionId" class="answer-text">@item.AnswerOption.Text</label>
                 </div>
             }
             else
@@ -73,8 +79,7 @@
                            type="checkbox"
                            value="true" />
                     <input name="@item.AnswerOptionId" type="hidden" value="false" />
-                    <span></span>
-                    @item.AnswerOption.Text
+                    <label asp-for="@item.AnswerOptionId">@item.AnswerOption.Text</label>
                 </div>
             }
         }
@@ -100,9 +105,16 @@
         </div>
 
         <div class="form-group">
-            <input type="submit" name="SubmitButton_1" id="SubmitButton_1" value="@ViewData["SubmitButton_1"]" class="btn btn-primary" />
+            @if (Model.StagesCount == 1)
+            {
+                <input type="submit" name="SubmitButton_1" id="SubmitButton_1" value="@ViewData["SubmitButton_1"]" class="btn btn-primary @dangerClass" />
+            }
+            else
+            {
+                <input type="submit" name="SubmitButton_1" id="SubmitButton_1" value="@ViewData["SubmitButton_1"]" class="btn btn-primary" />
+            }
         </div>
     </form>
-</div>
+    </p>
 
 

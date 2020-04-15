@@ -18,11 +18,5 @@ namespace TrainingProject.Web.Controllers
         {
             return View();
         }
-
-        [HttpPost]
-        public IActionResult Index2()
-        {
-            return View("index");
-        }
     }
 }

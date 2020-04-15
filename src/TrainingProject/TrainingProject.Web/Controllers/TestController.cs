@@ -28,6 +28,7 @@ namespace TrainingProject.Web.Controllers
         private readonly IAnswersManager _answersManager;
 
         private readonly IMapper _mapper;
+
         public TestController(ITestManager testManager, IMapper mapper,
             IQuestionManager questionManager, IUserManager userManager, IAnswersManager answersManager)
         {

@@ -10,6 +10,6 @@ namespace TrainingProject.Common
 
         public const string NotFinished = "notFinished";
 
-        public const string Finished = "Finished";
+        public const string Finished = "finished";
     }
 }
