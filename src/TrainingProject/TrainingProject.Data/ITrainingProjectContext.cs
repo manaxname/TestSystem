@@ -14,8 +14,8 @@ namespace TrainingProject.Data
         DbSet<User> Users { get; set; }
         DbSet<Test> Tests { get; set; }
         DbSet<Question> Questions { get; set; }
-        DbSet<AnswerOption> AnswersOptions { get; set; }
-        DbSet<UserAnswerOption> UserAnswerOptions { get; set; }
+        DbSet<Answer> Answers { get; set; }
+        DbSet<UserAnswer> UserAnswers { get; set; }
         DbSet<UserTest> UserTests { get; set; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken); 

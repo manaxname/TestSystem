@@ -6,12 +6,12 @@ using System.Text;
 using TrainingProject.Data;
 using TrainingProject.Domain.Logic.Interfaces;
 using TrainingProject.Domain.Models;
-using DataAnswerOption = TrainingProject.Data.Models.AnswerOption;
-using DomainAnswerOption = TrainingProject.Domain.Models.AnswerOption;
+using DataAnswer = TrainingProject.Data.Models.Answer;
+using DomainAnswer = TrainingProject.Domain.Models.Answer;
 using DataUser = TrainingProject.Data.Models.User;
 using DomainUser = TrainingProject.Domain.Models.User;
-using DataUserAnswerOption = TrainingProject.Data.Models.UserAnswerOption;
-using DomainUserAnswerOption = TrainingProject.Domain.Models.UserAnswerOption;
+using DataUserAnswer = TrainingProject.Data.Models.UserAnswer;
+using DomainUserAnswer = TrainingProject.Domain.Models.UserAnswer;
 using DataQuestion = TrainingProject.Data.Models.Question;
 using DomainQuestion = TrainingProject.Domain.Models.Question;
 using Microsoft.EntityFrameworkCore;
@@ -33,77 +33,77 @@ namespace TrainingProject.Domain.Logic.Managers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public int CreateAnswerOption(DomainAnswerOption answerOption)
+        public int CreateAnswer(DomainAnswer answer)
         {
-            if (!_qusetionManager.IsQuestionExists(answerOption.QuestionId))
+            if (!_qusetionManager.IsQuestionExists(answer.QuestionId))
             {
                 // TODO: Custom Exception here.
                 throw new Exception(message: "Question doesn't exist.");
             }
 
-            if (this.IsAnswerOptionExists(answerOption.Id))
+            if (this.IsAnswerExists(answer.Id))
             {
                 // TODO: Custom Exception here.
-                throw new Exception(message: "AnswerOption doesn't exist.");
+                throw new Exception(message: "Answer doesn't exist.");
             }
 
-            var dataAnswerOption = _mapper.Map<DataAnswerOption>(answerOption);
+            var dataAnswer = _mapper.Map<DataAnswer>(answer);
 
-            _tpContext.AnswersOptions.Add(dataAnswerOption);
+            _tpContext.Answers.Add(dataAnswer);
 
             return _tpContext.SaveChangesAsync(default).Result;
         }
 
-        public int CreateUserAnswerOption(DomainUserAnswerOption userAnswerOption)
+        public int CreateUserAnswer(DomainUserAnswer userAnswer)
         {
-            if (!this.IsAnswerOptionExists(userAnswerOption.AnswerOptionId))
+            if (!this.IsAnswerExists(userAnswer.AnswerId))
             {
                 // TODO: Custom Exception here.
-                throw new Exception(message: "AnswerOption doesn't exist.");
+                throw new Exception(message: "Answer doesn't exist.");
             }
 
-            if (this.IsUserAnswerOptionExists(userAnswerOption.UserId, userAnswerOption.AnswerOptionId))
+            if (this.IsUserAnswerExists(userAnswer.UserId, userAnswer.AnswerId))
             {
                 // TODO: Custom Exception here.
-                throw new Exception(message: "UserAnswerOption already exists.");
+                throw new Exception(message: "UserAnswer already exists.");
             }
 
-            var dataUserAnswerOption = _mapper.Map<DataUserAnswerOption>(userAnswerOption);
+            var dataUserAnswer = _mapper.Map<DataUserAnswer>(userAnswer);
 
-            _tpContext.UserAnswerOptions.Add(dataUserAnswerOption);
+            _tpContext.UserAnswers.Add(dataUserAnswer);
 
             return _tpContext.SaveChangesAsync(default).Result;
         }
 
-        public int CreateUserAnswerOptions(IEnumerable<DomainUserAnswerOption> userAnswerOptions)
+        public int CreateUserAnswers(IEnumerable<DomainUserAnswer> userAnswers)
         {
-            _tpContext.UserAnswerOptions.AddRange(
-                userAnswerOptions.Select(x => _mapper.Map<DataUserAnswerOption>(x)));
+            _tpContext.UserAnswers.AddRange(
+                userAnswers.Select(x => _mapper.Map<DataUserAnswer>(x)));
 
             return _tpContext.SaveChangesAsync(default).Result;
         }
 
-        public void DeleteAnswerOption(int id)
+        public void DeleteAnswer(int id)
         {
             throw new NotImplementedException();
         }
 
-        public DomainAnswerOption GetAnswerOptionById(int id)
+        public DomainAnswer GetAnswerById(int id)
         {
-            if (!this.IsAnswerOptionExists(id))
+            if (!this.IsAnswerExists(id))
             {
                 // TODO: Custom Exception here.
-                throw new Exception(message: "AnswerOption does't exist.");
+                throw new Exception(message: "Answer does't exist.");
             }
 
-            var dataAnswerOption = _tpContext.AnswersOptions.First(answerOption => answerOption.Id == id);
+            var dataAnswer = _tpContext.Answers.First(answer => answer.Id == id);
 
-            var domainAnswerOption = _mapper.Map<DomainAnswerOption>(dataAnswerOption);
+            var domainAnswer = _mapper.Map<DomainAnswer>(dataAnswer);
 
-            return domainAnswerOption;
+            return domainAnswer;
         }
 
-        public int GetAnswerOptionCountByQuestionId(int questionId)
+        public int GetAnswerCountByQuestionId(int questionId)
         {
             if (!_qusetionManager.IsQuestionExists(questionId))
             {
@@ -111,11 +111,10 @@ namespace TrainingProject.Domain.Logic.Managers
                 throw new Exception(message: "Question doesn't exist.");
             }
 
-            return _tpContext.AnswersOptions
-                .Count(answerOption => answerOption.QuestionId == questionId);
+            return _tpContext.Answers.Count(answer => answer.QuestionId == questionId);
         }
 
-        public IEnumerable<DomainAnswerOption> GetAnswerOptionsByQuestionId(int questionId)
+        public IEnumerable<DomainAnswer> GetAnswersByQuestionId(int questionId)
         {
             if (!_qusetionManager.IsQuestionExists(questionId))
             {
@@ -123,63 +122,74 @@ namespace TrainingProject.Domain.Logic.Managers
                 throw new Exception(message: "Question doesn't exist.");
             }
 
-            var domainAnswerOptions = _tpContext.AnswersOptions
-                .Where(answerOption => answerOption.QuestionId == questionId)
-                .Select(answerOption => _mapper.Map<DomainAnswerOption>(answerOption));
+            var domainAnswers = _tpContext.Answers
+                .Where(answer => answer.QuestionId == questionId)
+                .Select(answer => _mapper.Map<DomainAnswer>(answer));
 
-            if (domainAnswerOptions == null)
+            if (domainAnswers == null)
             {
-               return Enumerable.Empty<DomainAnswerOption>();
+               return Enumerable.Empty<DomainAnswer>();
             }
 
-            return domainAnswerOptions;
+            return domainAnswers;
         }
 
-        public DomainUserAnswerOption GetUserAnswerOptionByIds(int userId, int answerOptionId)
+        public DomainUserAnswer GetUserAnswerByIds(int userId, int answerId)
         {
-            if (!this.IsUserAnswerOptionExists(userId, answerOptionId))
+            if (!this.IsUserAnswerExists(userId, answerId))
             {
                 // TODO: Custom Exception here.
-                throw new Exception(message: "UserAnswerOption does't exist.");
+                throw new Exception(message: "UserAnswer does't exist.");
             }
 
-            var dataUserAnswerOption = _tpContext.UserAnswerOptions
-                .First(userAnswerOption => userAnswerOption.UserId == userId && 
-                    userAnswerOption.AnswerOptionId == answerOptionId);
+            var dataUserAnswer = _tpContext.UserAnswers
+                .First(userAnswer => userAnswer.UserId == userId && 
+                    userAnswer.AnswerId == answerId);
 
-            var domainUserAnswerOption = _mapper.Map<DomainUserAnswerOption>(dataUserAnswerOption);
+            var domainUserAnswer = _mapper.Map<DomainUserAnswer>(dataUserAnswer);
 
-            return domainUserAnswerOption;
+            return domainUserAnswer;
         }
 
-        public IEnumerable<DomainUserAnswerOption> GetUserAnswerOptionsByQuestionId(int userId, int questionId)
+        public IEnumerable<DomainUserAnswer> GetUserAnswersByQuestionId(int userId, int questionId)
         {
-            IEnumerable<DomainUserAnswerOption> domainUserAnswerOptions;
+            IEnumerable<DomainUserAnswer> domainUserAnswers;
 
-            domainUserAnswerOptions = _tpContext.UserAnswerOptions.Include(x => x.AnswerOption)
-                .Where(x => x.UserId == userId && x.AnswerOption.QuestionId == questionId)
-                .Select(x => _mapper.Map<DomainUserAnswerOption>(x));
+            domainUserAnswers = _tpContext.UserAnswers.Include(x => x.Answer)
+                .Where(x => x.UserId == userId && x.Answer.QuestionId == questionId)
+                .Select(x => _mapper.Map<DomainUserAnswer>(x));
 
-            return domainUserAnswerOptions;
+            return domainUserAnswers;
         }
 
-        public bool IsAnswerOptionExists(int id)
+        public bool IsAnswerExists(int id)
         {
-            return _tpContext.AnswersOptions.Any(answersOptions => answersOptions.Id == id);
+            return _tpContext.Answers.Any(answers => answers.Id == id);
         }
 
-        public bool IsUserAnswerOptionExists(int userId, int answerOptionId)
+        public bool IsUserAnswerExists(int userId, int answerId)
         {
-            return _tpContext.UserAnswerOptions.Any(x => x.UserId == userId && x.AnswerOptionId == answerOptionId);
+            return _tpContext.UserAnswers.Any(x => x.UserId == userId && x.AnswerId == answerId);
         }
 
-        public int SetUserAnswerOptionValid(int userId, int answerOptionId, bool isValid)
+        public int UpdateUserAnswerValid(int userId, int answerId, bool isValid)
         {
-            var dataUserAnswerOption = _tpContext.UserAnswerOptions.FirstOrDefault(x => x.UserId == userId && x.AnswerOptionId == answerOptionId);
+            var dataUserAnswer = _tpContext.UserAnswers.FirstOrDefault(x => x.UserId == userId && x.AnswerId == answerId);
 
-            dataUserAnswerOption.isValid = isValid;
+            dataUserAnswer.isValid = isValid;
 
-            _tpContext.UserAnswerOptions.Update(dataUserAnswerOption);
+            _tpContext.UserAnswers.Update(dataUserAnswer);
+
+            return _tpContext.SaveChangesAsync(default).Result;
+        }
+
+        public int UpdateUserAnswerText(int userId, int answerId, string text)
+        {
+            var dataUserAnswer = _tpContext.UserAnswers.FirstOrDefault(x => x.UserId == userId && x.AnswerId == answerId);
+
+            dataUserAnswer.Text = text;
+
+            _tpContext.UserAnswers.Update(dataUserAnswer);
 
             return _tpContext.SaveChangesAsync(default).Result;
         }

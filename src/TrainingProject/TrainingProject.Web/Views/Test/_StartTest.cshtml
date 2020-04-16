@@ -13,8 +13,9 @@
         int.TryParse(ViewData["UserId"].ToString(), out UserId);
     }
 
-    string CurrQuestionText =
-        CurrQuestionText = ViewData["CurrQuestionText"].ToString();
+    string CurrQuestionText = ViewData["CurrQuestionText"].ToString();
+
+    string CurrQuestionType = ViewData["CurrQuestionType"].ToString();
 
     int CurrQuestionStage = 0;
     if (ViewData.ContainsKey("CurrQuestionStage"))
@@ -34,21 +35,17 @@
         int.TryParse(ViewData["CurrQuestionId"].ToString(), out CurrQuestionId);
     }
 
-    string QuestionIds = ViewData["QuestionIds"].ToString();
+    string UserQuestionIds = ViewData["UserQuestionIds"].ToString();
+    var questionIds = UserQuestionIds.Split(",").Select(x => int.Parse(x));
 
-    var currQuestionUserAnswersOptions =
-        (IEnumerable<TrainingProject.Web.Models.UserAnswerOptionModel>)
-        ViewData["CurrQuestionUserAnswersOptions"];
+    var CurrQuestionUserAnswers = (IEnumerable<TrainingProject.Web.Models.UserAnswerModel>) ViewData["CurrQuestionUserAnswerss"];
+
 
     string dangerClass = string.Empty;
     @if (ViewData["SubmitButton_1"].ToString() == "Finish")
     {
         dangerClass = "btn btn-danger";
     }
-
-    var questionIds = QuestionIds
-       .Split(",")
-       .Select(x => int.Parse(x));
 
     string currentClass = "btn btn-dark";
     int stage = 1;
@@ -79,31 +76,44 @@
 
         <pre class="question-text-block"><span class="questionStyle">@CurrQuestionText</span></pre>
 
-        @foreach (var item in currQuestionUserAnswersOptions)
+        @if (CurrQuestionType == QuestionTypes.Option)
         {
-            if (item.isValid)
+            @foreach (var item in CurrQuestionUserAnswers)
             {
-                <div class="form-group">
-                    <input data-val="true"
-                           id="@item.AnswerOptionId"
-                           name="@item.AnswerOptionId"
-                           type="checkbox"
-                           value="true"
-                           checked />
-                    <label asp-for="@item.AnswerOptionId">@item.AnswerOption.Text</label>
-                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
-                </div>
+                if (item.isValid)
+                {
+                    <div class="form-group">
+                        <input data-val="true"
+                               id="AnswerId@(item.AnswerId)"
+                               name="AnswerId@(item.AnswerId)"
+                               type="checkbox"
+                               value="true"
+                               checked />
+                        <input name="AnswerId@(item.AnswerId)" type="hidden" value="false" />
+                        <label asp-for="AnswerId+@item.AnswerId">@item.Answer.Text</label>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <input data-val="true"
+                               id="AnswerId@(item.AnswerId)"
+                               name="AnswerId@(item.AnswerId)"
+                               type="checkbox"
+                               value="true" />
+                        <input name="AnswerId@(item.AnswerId)" type="hidden" value="false" />
+                        <label asp-for="AnswerId+@item.AnswerId">@item.Answer.Text</label>
+                    </div>
+                }
             }
-            else
+        }
+        else if (CurrQuestionType == QuestionTypes.Text && CurrQuestionUserAnswers.Count() == 1)
+        {
+            foreach (var item in CurrQuestionUserAnswers)
             {
                 <div class="form-group">
-                    <input data-val="true"
-                           id="@item.AnswerOptionId"
-                           name="@item.AnswerOptionId"
-                           type="checkbox"
-                           value="true" />
-                    <label asp-for="@item.AnswerOptionId">@item.AnswerOption.Text</label>
-                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
+                    <label asp-for="@item." class="control-label"></label>
+                    <input type="text" id="AnswerId@(item.AnswerId)" name="AnswerId@(item.AnswerId)" value="@item.Text">
                 </div>
             }
         }
@@ -120,9 +130,11 @@
         <div class="form-group">
             <input type="hidden" asp-for="@CurrQuestionStage" />
         </div>
-
         <div class="form-group">
-            <input type="hidden" asp-for="@QuestionIds" />
+            <input type="hidden" asp-for="@CurrQuestionType" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@UserQuestionIds" />
         </div>
         <div class="form-group">
             <input type="hidden" asp-for="@CurrQuestionId" />

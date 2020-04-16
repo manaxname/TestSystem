@@ -13,12 +13,12 @@ namespace TrainingProject.Web.Models
         public DateTime StartTime { get; set; }
         public int TestMinutes { get; set; }
         public int SecondsLeft { get; set; }
+        public string UserQuestionIds { get; set; }
 
-        public string CurrQuestionText { get; set; }
-        public int CurrQuestionStage { get; set; }
-
-        public IEnumerable<UserAnswerOptionModel> CurrQuestionUserAnswersOptions { get; set; }
-        public string QuestionIds { get; set; }
         public int CurrQuestionId { get; set; }
+        public int CurrQuestionStage { get; set; }
+        public string CurrQuestionText { get; set; }
+        public string CurrQuestionType { get; set; }
+        public IEnumerable<UserAnswerModel> CurrQuestionUserAnswers { get; set; }
     }
 }

@@ -41,16 +41,16 @@ namespace TrainingProject.Web
             services.AddRazorPages();
 
             services.AddDistributedMemoryCache();
-            services.AddSession(options => {
-                options.IdleTimeout = TimeSpan.FromMinutes(int.MaxValue);
+            services.AddSession(s => {
+                s.IdleTimeout = TimeSpan.FromMinutes(int.MaxValue);
             });
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
+                .AddCookie(s =>
                 {
-                    options.AccessDeniedPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
-                    options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
+                    s.AccessDeniedPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
+                    s.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
                 });
             services.AddAuthorization(opts => {
                 opts.AddPolicy("OnlyForAdmins", policy => {

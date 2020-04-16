@@ -17,8 +17,8 @@ namespace TrainingProject.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Test> Tests { get; set; }
         public DbSet<Question> Questions { get; set; }
-        public DbSet<AnswerOption> AnswersOptions { get; set; }
-        public DbSet<UserAnswerOption> UserAnswerOptions { get; set; }
+        public DbSet<Answer> Answers { get; set; }
+        public DbSet<UserAnswer> UserAnswers { get; set; }
         public DbSet<UserTest> UserTests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,20 +29,20 @@ namespace TrainingProject.Data
                 .HasForeignKey(x => x.TestId);
 
             modelBuilder.Entity<Question>()
-                .HasMany(x => x.AnswersOptions)
+                .HasMany(x => x.Answers)
                 .WithOne()
                 .HasForeignKey(x => x.QuestionId);
 
-            modelBuilder.Entity<UserAnswerOption>()
-                .HasKey(x => new { x.UserId, x.AnswerOptionId });
-            modelBuilder.Entity<UserAnswerOption>()
+            modelBuilder.Entity<UserAnswer>()
+                .HasKey(x => new { x.UserId, x.AnswerId });
+            modelBuilder.Entity<UserAnswer>()
                 .HasOne<User>(x => x.User)
-                .WithMany(x => x.UserAnswerOptions)
+                .WithMany(x => x.UserAnswers)
                 .HasForeignKey(x => x.UserId);
-            modelBuilder.Entity<UserAnswerOption>()
-               .HasOne<AnswerOption>(x => x.AnswerOption)
-               .WithMany(x => x.UserAnswerOptions)
-               .HasForeignKey(x => x.AnswerOptionId);
+            modelBuilder.Entity<UserAnswer>()
+               .HasOne<Answer>(x => x.Answer)
+               .WithMany(x => x.UserAnswers)
+               .HasForeignKey(x => x.AnswerId);
 
             modelBuilder.Entity<UserTest>()
                 .HasKey(x => new { x.UserId, x.TestId });

@@ -11,7 +11,7 @@ namespace TrainingProject.Data.Models
         public string PasswordHash { get; set; }
         public string Role { get; set; }
 
-        public ICollection<UserAnswerOption> UserAnswerOptions { get; set; }
+        public ICollection<UserAnswer> UserAnswers { get; set; }
         public ICollection<UserTest> UserTests { get; set; }
     }
 }

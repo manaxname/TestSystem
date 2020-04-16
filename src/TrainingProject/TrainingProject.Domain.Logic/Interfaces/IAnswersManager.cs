@@ -7,16 +7,18 @@ namespace TrainingProject.Domain.Logic.Interfaces
 {
     public interface IAnswersManager
     {
-        int CreateAnswerOption(AnswerOption answerWithOption);
-        int CreateUserAnswerOption(UserAnswerOption userAnswerOption);
-        int CreateUserAnswerOptions(IEnumerable<UserAnswerOption> userAnswerOptions);
-        AnswerOption GetAnswerOptionById(int id);
-        UserAnswerOption GetUserAnswerOptionByIds(int userId, int answerOptionId);
-        IEnumerable<UserAnswerOption> GetUserAnswerOptionsByQuestionId(int userId, int questionId);
-        IEnumerable<AnswerOption> GetAnswerOptionsByQuestionId(int questionId);
-        void DeleteAnswerOption(int id);
-        bool IsAnswerOptionExists(int id);
-        bool IsUserAnswerOptionExists(int userId, int answerOptionId);
-        int SetUserAnswerOptionValid(int userId, int answerOptionId, bool isValid);
+        int CreateAnswer(Answer answer);
+        int CreateUserAnswer(UserAnswer userAnswer);
+        int CreateUserAnswers(IEnumerable<UserAnswer> userAnswers);
+        Answer GetAnswerById(int id);
+        int GetAnswerCountByQuestionId(int questionId);
+        UserAnswer GetUserAnswerByIds(int userId, int answerId);
+        IEnumerable<UserAnswer> GetUserAnswersByQuestionId(int userId, int questionId);
+        IEnumerable<Answer> GetAnswersByQuestionId(int questionId);
+        void DeleteAnswer(int id);
+        bool IsAnswerExists(int id);
+        bool IsUserAnswerExists(int userId, int answerId);
+        int UpdateUserAnswerValid(int userId, int answerId, bool isValid);
+        int UpdateUserAnswerText(int userId, int answerId, string text);
     }
 }

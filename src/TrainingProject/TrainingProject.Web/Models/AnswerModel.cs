@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 
 namespace TrainingProject.Web.Models
 {
-    public class AnswerOptionModel
+    public class AnswerModel
     {
         public int Id { get; set; }
 
         public string Text { get; set; }
         public bool IsValid { get; set; }
+
         public int TestId { get; set; }
         public int QuestionId { get; set; }
         public int QuestionText { get; set; }

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TrainingProject.Web.Models.AnswerOptionModel>
+﻿@model IEnumerable<TrainingProject.Web.Models.AnswerModel>
 
 @{
     ViewData["Title"] = "Edit Question";
@@ -20,12 +20,26 @@
     {
         questionType = ViewData["QuestionType"].ToString();
     }
+
+    int answersCount = 0;
+    if (ViewData.ContainsKey("AnswersCount"))
+    {
+        int.TryParse(ViewData["AnswersCount"].ToString(), out answersCount);
+    }
 }
 
-    <h5>@questionId. @ViewData["QuestionText"]</h5>
+<h5>@questionId. @ViewData["QuestionText"]</h5>
 <p>
-    @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
-        new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
+    @if (questionType == QuestionTypes.Text && answersCount < 1)
+    {
+        @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
+            new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
+    }
+    else if (questionType == QuestionTypes.Option)
+    {
+        @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
+              new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
+    }
 </p>
 
 <table class="table">
@@ -34,9 +48,12 @@
             <th>
                 @Html.DisplayNameFor(model => model.Id)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsValid)
-            </th>
+            @if (questionType == QuestionTypes.Option)
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.IsValid)
+                </th>
+            }
             <th>
                 @Html.DisplayNameFor(model => model.QuestionId)
             </th>
@@ -52,9 +69,12 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.Id)
                 </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.IsValid)
-                </td>
+                @if (questionType == QuestionTypes.Option)
+                {
+                    <td>
+                        @Html.DisplayFor(modelItem => item.IsValid)
+                    </td>
+                }
                 <td>
                     @Html.DisplayFor(modelItem => item.QuestionId)
                 </td>

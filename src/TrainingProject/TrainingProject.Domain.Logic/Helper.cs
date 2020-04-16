@@ -45,28 +45,29 @@ namespace TrainingProject.Domain.Logic
             return question;
         }
 
-        public static AnswerOption CreateDomainAnswerWithOption(string text, bool isValid, int QuestionId)
+        public static Answer CreateDomainAnswerWith(string text, bool isValid, int QuestionId)
         {
-            var answerWithOption = new AnswerOption
+            var answerWith = new Answer
             {
                 Text = text,
                 IsValid = isValid,
                 QuestionId = QuestionId
             };
 
-            return answerWithOption;
+            return answerWith;
         }
 
-        public static UserAnswerOption CreateDomainUserAnswerWithOption(int userId, int answerOptionId, bool isValid)
+        public static UserAnswer CreateDomainUserAnswerWith(int userId, int answerId, bool isValid, string text)
         {
-            var userAnswerWithOption = new UserAnswerOption
+            var userAnswerWith = new UserAnswer
             {
                 UserId = userId,
-                AnswerOptionId = answerOptionId,
-                isValid = isValid
+                AnswerId = answerId,
+                isValid = isValid,
+                Text = text
             };
 
-            return userAnswerWithOption;
+            return userAnswerWith;
         }
 
         public static UserTest CreateDomainUserTest(int userId, int testId, string status)

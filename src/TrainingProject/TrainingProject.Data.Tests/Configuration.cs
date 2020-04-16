@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Microsoft.Extensions.Configuration;
 
-namespace TrainingProject.Domaim.Logic.Tests
+namespace TrainingProject.Data.Tests
 {
     internal class Configuration
     {

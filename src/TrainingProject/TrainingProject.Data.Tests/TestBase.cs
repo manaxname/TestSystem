@@ -2,7 +2,6 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using TrainingProject.Data.Models;
-using TrainingProject.Domaim.Logic.Tests;
 using TrainingProject.Domain.Logic.Mappers;
 
 namespace TrainingProject.Data.Tests

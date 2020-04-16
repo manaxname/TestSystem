@@ -9,8 +9,8 @@ using TrainingProject.Web.Models;
 using AutoMapper;
 using DomainTest = TrainingProject.Domain.Models.Test;
 using DomainQuestion = TrainingProject.Domain.Models.Question;
-using DomainAnswerOption = TrainingProject.Domain.Models.AnswerOption;
-using DomainUserAnswerOption = TrainingProject.Domain.Models.UserAnswerOption;
+using DomainAnswer = TrainingProject.Domain.Models.Answer;
+using DomainUserAnswer = TrainingProject.Domain.Models.UserAnswer;
 using DomainUserTest = TrainingProject.Domain.Models.UserTest;
 using System.Text.RegularExpressions;
 using TrainingProject.Common;
@@ -169,17 +169,18 @@ namespace TrainingProject.Web.Controllers
                 return BadRequest(questionType);
             }
 
-            var answerOptions = _answersManager
-                .GetAnswerOptionsByQuestionId(questionId)
-                .Select(answerOption => _mapper.Map<AnswerOptionModel>(answerOption))
+            var answers = _answersManager
+                .GetAnswersByQuestionId(questionId)
+                .Select(answer => _mapper.Map<AnswerModel>(answer))
                 .ToList();
 
             ViewData["TestId"] = testId;
             ViewData["QuestionId"] = questionId;
             ViewData["QuestionType"] = questionType;
             ViewData["QuestionText"] = _questionManager.GetQuestionTextById(questionId);
+            ViewData["AnswersCount"] = _answersManager.GetAnswerCountByQuestionId(questionId);
 
-            return View(answerOptions);
+            return View(answers);
         }
 
         [HttpGet]
@@ -195,14 +196,19 @@ namespace TrainingProject.Web.Controllers
 
         [HttpPost]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> CreateAnswer(AnswerOptionModel model)
+        public async Task<IActionResult> CreateAnswer(AnswerModel model)
         {
-            if (ModelState.IsValid && 
-                _questionManager.IsQuestionExists(model.QuestionId))
+            if (ModelState.IsValid && _questionManager.IsQuestionExists(model.QuestionId))
             {
-                var domainAnswerOption = _mapper.Map<DomainAnswerOption>(model);
+                var domainAnswer = _mapper.Map<DomainAnswer>(model);
+                var answersCount = _answersManager.GetAnswerCountByQuestionId(model.QuestionId);
 
-                _answersManager.CreateAnswerOption(domainAnswerOption);
+                if (model.QuestionType == QuestionTypes.Text && answersCount >= 1)
+                {
+                    return BadRequest();
+                }
+
+                _answersManager.CreateAnswer(domainAnswer);
 
                 return RedirectToAction("EditQuestion", "Test", 
                     new { @TestId = model.TestId, @QuestionId = model.QuestionId, @QuestionType = model.QuestionType });
@@ -219,111 +225,78 @@ namespace TrainingProject.Web.Controllers
         {
             var userEmail = User.Identity.Name;
             var userId = _userManager.GetUserId(userEmail);
-            if (!_testManager.IsUserTestExists(userId, testId))
-            {
-                return BadRequest();
-            }
-
             var userTest = _testManager.GetUserTest(userId, testId);
+            var testStages = _questionManager.GetTestStagesByTestId(testId).ToList();
+            var stagesCount = testStages.Count;
+            var userQuestionIds = new List<int>();
+            DomainQuestion currQuestion = null;
+            IEnumerable<UserAnswerModel> currQuestionUserAnswers = null;
+            int currQuestionStage = 0;
+            int secondsLeft = 0;
+            DateTime startTime = default;
+            string currQuestionType = string.Empty;
 
             if (userTest.Status == TestStatus.Finished)
             {
                 return RedirectToAction("EndTest");
             }
-
-            var testStages = _questionManager.GetTestStagesByTestId(testId).ToList();
-            int stagesCount = testStages.Count;
-            var questionIds = new List<int>();
-            DomainQuestion currQuestion = null;
-            IEnumerable<UserAnswerOptionModel> currQuestionUserAnswersOptions = null;
-            int currQuestionStage = 0;
-            int secondsLeft = 0;
-            DateTime startTime = default;
-
-            if (userTest.Status == TestStatus.NotStarted)
+            else if (userTest.Status == TestStatus.NotStarted)
             {
                 _testManager.UpdateUserTestStatus(userId, testId, TestStatus.NotFinished);
 
-                for (int stage = 1; stage <= stagesCount; stage++)
-                {
-                    int questionId = _questionManager.GetRandomQuestionInTestByStage(testId, stage).Id;
-                    _answersManager
-                        .GetAnswerOptionsByQuestionId(questionId)
-                        .ToList()
-                        .ForEach(answerOption =>
-                        {
-                            var userAnswerOption = new DomainUserAnswerOption
-                            {
-                                AnswerOptionId = answerOption.Id,
-                                isValid = false,
-                                UserId = userId
-                            };
+                userQuestionIds = CreateUserAnswersAndGetQuestionIds(testId, userId);
 
-                            if (!_answersManager.IsUserAnswerOptionExists(userId, answerOption.Id))
-                            {
-                                _answersManager.CreateUserAnswerOption(userAnswerOption);
-                            }
-                        });
-
-                    questionIds.Add(questionId);
-                }
-
-                currQuestion = _questionManager.GetQuestionById(questionIds[0]);
-                currQuestionUserAnswersOptions = _answersManager
-                    .GetUserAnswerOptionsByQuestionId(userId, currQuestion.Id)
-                    .Select(x => _mapper.Map<UserAnswerOptionModel>(x));
+                currQuestion = _questionManager.GetQuestionById(userQuestionIds[0]);
+                currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
+                    .Select(x => _mapper.Map<UserAnswerModel>(x));
                 currQuestionStage = currQuestion.Stage;
+                currQuestionType = currQuestion.QuestionType;
 
                 secondsLeft = userTest.TestMinutes * 60;
                 startTime = DateTime.Now;
+
                 _testManager.UpdateUserTestStartTime(userId, testId, startTime);
             }
             else if (userTest.Status == TestStatus.NotFinished)
             {
-                secondsLeft = userTest.TestMinutes * 60 -
-                    Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
-
+                secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
                 if (secondsLeft <= 0)
                 {
                     _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
                     return BadRequest("Time's been expired.");
                 }
 
-                var questions = _questionManager.GetUserQuestionsByTestId(userId, testId)
-                    .ToList();
+                _questionManager.GetUserQuestionsByTestId(userId, testId).ToList()
+                    .ForEach(question => userQuestionIds.Add(question.Id));
 
-                for (int stage = 1; stage <= stagesCount; stage++)
-                {
-                    questionIds.Add(questions[stage - 1].Id);
-                }
-
-                currQuestion = questions[0];
-                currQuestionUserAnswersOptions = _answersManager
-                    .GetUserAnswerOptionsByQuestionId(userId, currQuestion.Id)
-                    .Select(x => _mapper.Map<UserAnswerOptionModel>(x));
+                currQuestion = _questionManager.GetQuestionById(userQuestionIds[0]);
+                currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
+                    .Select(x => _mapper.Map<UserAnswerModel>(x));
                 currQuestionStage = currQuestion.Stage;
+                currQuestionType = currQuestion.QuestionType;
             }
 
             var startTest = new StartTestModel()
             {
                 UserId = userId,
                 TestId = testId,
-                CurrQuestionId = currQuestion.Id,
-                CurrQuestionText = currQuestion.Text,
-                CurrQuestionStage= currQuestion.Stage,
                 StagesCount = stagesCount,
                 StartTime = startTime,
                 TestMinutes = userTest.TestMinutes,
                 SecondsLeft = secondsLeft,
+                UserQuestionIds = string.Join(",", userQuestionIds),
 
-                QuestionIds = string.Join(",", questionIds),
-                CurrQuestionUserAnswersOptions = currQuestionUserAnswersOptions,
+                CurrQuestionId = currQuestion.Id,
+                CurrQuestionText = currQuestion.Text,
+                CurrQuestionStage = currQuestion.Stage,
+                CurrQuestionType = currQuestionType,
+                CurrQuestionUserAnswers = currQuestionUserAnswers,
             };
 
             ViewData["SubmitButton_1"] = "Next";
             ViewData["SubmitButton_2"] = string.Empty;
 
-            if (currQuestionStage == stagesCount)
+            if (stagesCount == 1)
             {
                 ViewData["SubmitButton_1"] = "Finish";
             }
@@ -336,64 +309,151 @@ namespace TrainingProject.Web.Controllers
         public async Task<IActionResult> StartTest()
         {
             var dictReq = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
-
             var submitButtonKey = dictReq.Keys.Single(x => x.Contains("SubmitButton"));
-            string submitButtonValue = dictReq[submitButtonKey];
+            var submitButtonValue = dictReq[submitButtonKey];
             var testId = int.Parse(dictReq["TestId"]);
             var userId = int.Parse(dictReq["UserId"]);
             var userTest = _testManager.GetUserTest(userId, testId);
+            var stagesCount = int.Parse(dictReq["StagesCount"]);
+            var currQuestionId = int.Parse(dictReq["CurrQuestionId"]);
+            var currQuestionStage = int.Parse(dictReq["CurrQuestionStage"]);
+            var currQuestionType = dictReq["CurrQuestionType"];
+            var userQuestionIds = dictReq["UserQuestionIds"].Split(",").Select(x => int.Parse(x)).ToList();
+            int secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
+            string answerKeySubStr = "AnswerId";
 
-            int secondsLeft = userTest.TestMinutes * 60 -
-                   Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
             if (secondsLeft <= 0)
             {
                 _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
                 return PartialView("_EndTest");
             }
 
-            var stagesCount = int.Parse(dictReq["StagesCount"]);
-            var currQuestionId = int.Parse(dictReq["CurrQuestionId"]);
-            var currQuestionStage = int.Parse(dictReq["CurrQuestionStage"]);
-            var questionIds = dictReq["QuestionIds"]
-                .Split(",")
-                .Select(x => int.Parse(x))
-                .ToList();
+            if (currQuestionType == QuestionTypes.Option)
+            {
+                dictReq.Keys.Where(x => x.Contains(answerKeySubStr)).ToList()
+                    .ForEach(key => {
+                        int answerId = int.Parse(key.Substring(answerKeySubStr.Length));
+                        bool isValid = dictReq[key].Contains("true") ? true : false;
 
-            var userAnswerOptionIds = dictReq
-                .Where(x => x.Value == "true,false" || x.Value == "false")
-                .Select(kvp => 
+                        _answersManager.UpdateUserAnswerValid(userId, answerId, isValid);
+                    });
+            }
+            else if (currQuestionType == QuestionTypes.Text)
+            {
+                string answerKey = dictReq.Keys.First(x => x.Contains(answerKeySubStr));
+                int answerId = int.Parse(answerKey.Substring(answerKeySubStr.Length));
+                string userAnswerText = dictReq[answerKey];
+
+                _answersManager.UpdateUserAnswerText(userId, answerId, userAnswerText);
+            }
+
+            ViewData["SubmitButton_1"] = "Next"; ViewData["SubmitButton_2"] = "Back";
+            SetSubmitButtonsTextAndChangeCurrQuestionStage(submitButtonValue, stagesCount, ref currQuestionStage);
+
+            if (submitButtonValue == "Finish" && currQuestionStage == stagesCount)
+            {
+                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+
+                var questions = _questionManager.GetUserQuestionsByTestId(userId, testId).ToList();
+                int points = 0;
+                foreach (var question in questions)
                 {
-                    bool isValid = false;
-
-                    if (kvp.Value == "true,false")
+                    if (question.QuestionType == QuestionTypes.Option)
                     {
-                        isValid = true;
+                        var correctAnswerIds = _answersManager
+                            .GetAnswersByQuestionId(question.Id)
+                            .Where(x => x.IsValid == true)
+                            .Select(x => x.Id)
+                            .ToHashSet();
+                        var userSelectedAnswerIds = _answersManager
+                            .GetUserAnswersByQuestionId(userId, question.Id)
+                            .Where(x => x.isValid == true)
+                            .Select(x => x.AnswerId)
+                            .ToHashSet();
+                        if (correctAnswerIds.SetEquals(userSelectedAnswerIds))
+                        {
+                            points += question.Points;
+                        }
                     }
-
-                    var newkvp = new KeyValuePair<int, bool>
-                    (
-                        int.Parse(kvp.Key),
-                        isValid
-                    );
-
-                    return newkvp;
-                })
-                .ToList();
-
-            userAnswerOptionIds.ForEach(x => {
-                if(x.Value)
-                {
-                    _answersManager.SetUserAnswerOptionValid(userId, x.Key, x.Value);
+                    else if(question.QuestionType == QuestionTypes.Text)
+                    {
+                        var answer = _answersManager.GetAnswerById(question.Id);
+                        var userAnswer = _answersManager.GetUserAnswersByQuestionId(userId, question.Id).Single();
+                        if (answer.Text == userAnswer.Text)
+                        {
+                            points += question.Points;
+                        }
+                    }
                 }
-                else
-                {
-                    _answersManager.SetUserAnswerOptionValid(userId, x.Key, x.Value);
-                }
-            });
 
-            ViewData["SubmitButton_1"] = "Next";
-            ViewData["SubmitButton_2"] = "Back";
+                _testManager.UpdateUserTestPoints(userId, testId, points);
+                
+                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+                return PartialView("_EndTest");
+            }
 
+            var currQuestion = _questionManager.GetQuestionById(userQuestionIds[currQuestionStage - 1]);
+            var currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
+                .Select(x => _mapper.Map<UserAnswerModel>(x));
+
+            ViewData["TestId"] = testId;
+            ViewData["UserId"] = userId;
+            ViewData["StagesCount"] = stagesCount;
+            ViewData["CurrQuestionText"] = currQuestion.Text;
+            ViewData["CurrQuestionStage"] = currQuestion.Stage;
+            ViewData["CurrQuestionType"] = currQuestion.QuestionType;
+            ViewData["CurrQuestionId"] = currQuestion.Id;
+
+            ViewData["UserQuestionIds"] = dictReq["UserQuestionIds"];
+            ViewData["CurrQuestionUserAnswerss"] = currQuestionUserAnswers;
+
+            return PartialView("_StartTest");
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForUsers")]
+        public async Task<IActionResult> EndTest(int userId , int testId)
+        {
+            _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+
+            return Ok();
+        }
+
+        private List<int> CreateUserAnswersAndGetQuestionIds(int testId, int userId)
+        {
+            var questionIds = new List<int>();
+            var stagesCount = _questionManager.GetTestStagesByTestId(testId).ToList().Count;
+
+            for (int stage = 1; stage <= stagesCount; stage++)
+            {
+                int questionId = _questionManager.GetRandomQuestionInTestByStage(testId, stage).Id;
+                string questionType = _questionManager.GetQuestionTypeById(questionId);
+
+                _answersManager.GetAnswersByQuestionId(questionId).ToList()
+                    .ForEach(answer =>
+                    {
+                        var userAnswer = new DomainUserAnswer
+                        {
+                            isValid = false,
+                            Text = string.Empty,
+                            UserId = userId,
+                            AnswerId = answer.Id
+                        };
+
+                        if (!_answersManager.IsUserAnswerExists(userId, answer.Id))
+                        {
+                            _answersManager.CreateUserAnswer(userAnswer);
+                        }
+                    });
+
+                questionIds.Add(questionId);
+            }
+
+            return questionIds;
+        }
+        
+        private void SetSubmitButtonsTextAndChangeCurrQuestionStage(string submitButtonValue, int stagesCount, ref int currQuestionStage)
+        {
             if (submitButtonValue == "Next" && currQuestionStage < stagesCount - 1)
             {
                 ViewData["SubmitButton_1"] = "Next";
@@ -416,9 +476,10 @@ namespace TrainingProject.Web.Controllers
                 currQuestionStage--;
             }
 
+            // if pagination button was clicked
             if (submitButtonValue != "Next" && submitButtonValue != "Back" && submitButtonValue != "Finish")
             {
-                 currQuestionStage = int.Parse(submitButtonValue);
+                currQuestionStage = int.Parse(submitButtonValue);
             }
 
             if (currQuestionStage == stagesCount)
@@ -429,65 +490,6 @@ namespace TrainingProject.Web.Controllers
             {
                 ViewData["SubmitButton_2"] = string.Empty;
             }
-
-            if (submitButtonValue == "Finish" && currQuestionStage == stagesCount)
-            {
-                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
-
-                var questions = _questionManager.GetUserQuestionsByTestId(userId, testId).ToList();
-
-                int points = 0;
-                foreach (var question in questions)
-                {
-                    var correctAnswerOptionIds = _answersManager
-                        .GetAnswerOptionsByQuestionId(question.Id)
-                        .Where(x => x.IsValid == true)
-                        .Select(x => x.Id)
-                        .ToHashSet();
-
-                    var userSelectedAnswerOptionIds = _answersManager
-                        .GetUserAnswerOptionsByQuestionId(userId, question.Id)
-                        .Where(x => x.isValid == true)
-                        .Select(x => x.AnswerOptionId)
-                        .ToHashSet();
-
-                    if (correctAnswerOptionIds.SetEquals(userSelectedAnswerOptionIds))
-                    {
-                        points += question.Points;
-                    }
-                }
-
-                _testManager.UpdateUserTestPoints(userId, testId, points);
-                
-                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
-                return PartialView("_EndTest");
-            }
-
-            var currQuestion = _questionManager.GetQuestionById(questionIds[currQuestionStage - 1]);
-            var currQuestionUserAnswersOptions = _answersManager
-                .GetUserAnswerOptionsByQuestionId(userId, currQuestion.Id)
-                .Select(x => _mapper.Map<UserAnswerOptionModel>(x));
-
-            ViewData["TestId"] = testId;
-            ViewData["UserId"] = userId;
-            ViewData["CurrQuestionText"] = currQuestion.Text;
-            ViewData["CurrQuestionStage"] = currQuestionStage;
-            ViewData["StagesCount"] = stagesCount;
-
-            ViewData["CurrQuestionId"] = currQuestion.Id;
-            ViewData["QuestionIds"] = dictReq["QuestionIds"];
-            ViewData["CurrQuestionUserAnswersOptions"] = currQuestionUserAnswersOptions;
-
-            return PartialView("_StartTest");
-        }
-
-        [HttpGet]
-        [Authorize(Policy = "OnlyForUsers")]
-        public async Task<IActionResult> EndTest(int userId , int testId)
-        {
-            _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
-
-            return Ok();
         }
     }
 }

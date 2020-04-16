@@ -192,16 +192,16 @@ namespace TrainingProject.Domain.Logic.Managers
         {
             var dataQuestions = _tpContext.Questions
                 .Where(x => x.TestId == testId)
-                .Include(x => x.AnswersOptions)
-                    .ThenInclude(x => x.UserAnswerOptions);
+                .Include(x => x.Answers)
+                    .ThenInclude(x => x.UserAnswers);
 
             var questions = new Dictionary<int, DomainQuestion>();
 
             foreach (var question in dataQuestions)
             {
-                foreach (var answerOption in question.AnswersOptions)
+                foreach (var answer in question.Answers)
                 {
-                    foreach (var item in answerOption.UserAnswerOptions)
+                    foreach (var item in answer.UserAnswers)
                     {
                         if (item.UserId == userId && !questions.ContainsKey(question.Id))
                         {

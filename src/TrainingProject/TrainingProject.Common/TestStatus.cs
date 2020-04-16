@@ -6,10 +6,10 @@ namespace TrainingProject.Common
 {
     public static class TestStatus
     {
-        public const string NotStarted = "notStarted";
+        public static string NotStarted = "notStarted";
 
-        public const string NotFinished = "notFinished";
+        public static string NotFinished = "notFinished";
 
-        public const string Finished = "finished";
+        public static string Finished = "finished";
     }
 }

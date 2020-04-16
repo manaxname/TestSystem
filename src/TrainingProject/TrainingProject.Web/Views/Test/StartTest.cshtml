@@ -4,9 +4,7 @@
     ViewData["Title"] = "Start Test";
 
 
-    var questionIds = Model.QuestionIds
-        .Split(",")
-        .Select(x => int.Parse(x));
+    var userQuestionIds = Model.UserQuestionIds.Split(",").Select(x => int.Parse(x));
 
     string dangerClass = string.Empty;
     @if (ViewData["SubmitButton_1"].ToString() == "Finish")
@@ -29,7 +27,7 @@
     };
 </script>
 
-<span id="results" class="d-flex justify-content-center">
+<div id="results" class="d-flex justify-content-center">
     <form asp-action="StartTest" asp-controller="Test"
           data-ajax="true" data-ajax-method="POST"
           data-ajax-mode="replace" data-ajax-update="#results"
@@ -37,7 +35,7 @@
 
         <h4>@Model.CurrQuestionStage / @Model.StagesCount</h4>
 
-        @foreach (var item in questionIds)
+        @foreach (var item in userQuestionIds)
         {
             if (stage == Model.CurrQuestionStage)
             {
@@ -55,31 +53,44 @@
 
         <pre class="question-text-block"><span class="questionStyle">@Model.CurrQuestionText</span></pre>
 
-        @foreach (var item in Model.CurrQuestionUserAnswersOptions)
+        @if (Model.CurrQuestionType == QuestionTypes.Option)
         {
-            if (item.isValid)
+            foreach (var item in Model.CurrQuestionUserAnswers)
             {
-                <div class="form-group">
-                    <input data-val="true"
-                           id="@item.AnswerOptionId"
-                           name="@item.AnswerOptionId"
-                           type="checkbox"
-                           value="true"
-                           checked />
-                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
-                    <label asp-for="@item.AnswerOptionId" class="answer-text">@item.AnswerOption.Text</label>
-                </div>
+                if (item.isValid)
+                {
+                    <div class="form-group">
+                        <input data-val="true"
+                               id="AnswerId@(item.AnswerId)"
+                               name="AnswerId@(item.AnswerId)"
+                               type="checkbox"
+                               value="true"
+                               checked />
+                        <input name="AnswerId@(item.AnswerId)" type="hidden" value="false" />
+                        <label asp-for="AnswerId+@item.AnswerId" class="answer-text">@item.Answer.Text</label>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <input data-val="true"
+                               id="AnswerId@(item.AnswerId)"
+                               name="AnswerId@(item.AnswerId)"
+                               type="checkbox"
+                               value="true" />
+                        <input name="AnswerId@(item.AnswerId)" type="hidden" value="false" />
+                        <label asp-for="AnswerId+@item.AnswerId">@item.Answer.Text</label>
+                    </div>
+                }
             }
-            else
+        }
+        else if (Model.CurrQuestionType == QuestionTypes.Text && Model.CurrQuestionUserAnswers.Count() == 1)
+        {
+            foreach (var item in Model.CurrQuestionUserAnswers)
             {
                 <div class="form-group">
-                    <input data-val="true"
-                           id="@item.AnswerOptionId"
-                           name="@item.AnswerOptionId"
-                           type="checkbox"
-                           value="true" />
-                    <input name="@item.AnswerOptionId" type="hidden" value="false" />
-                    <label asp-for="@item.AnswerOptionId">@item.AnswerOption.Text</label>
+                    <label asp-for="@item.Text" class="control-label"></label>
+                    <input type="text" id="AnswerId@(item.AnswerId)" name="AnswerId@(item.AnswerId)" value="@item.Text">
                 </div>
             }
         }
@@ -94,14 +105,16 @@
             <input type="hidden" asp-for="@Model.UserId" />
         </div>
         <div class="form-group">
-            <input type="hidden" asp-for="@Model.CurrQuestionStage" />
-        </div>
-
-        <div class="form-group">
-            <input type="hidden" asp-for="@Model.QuestionIds" />
+            <input type="hidden" asp-for="@Model.UserQuestionIds" />
         </div>
         <div class="form-group">
             <input type="hidden" asp-for="@Model.CurrQuestionId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.CurrQuestionType" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.CurrQuestionStage" />
         </div>
 
         <div class="form-group">
@@ -115,6 +128,6 @@
             }
         </div>
     </form>
-    </p>
+</div>
 
 

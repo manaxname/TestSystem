@@ -6,8 +6,8 @@ namespace TrainingProject.Common
 {
     public static class UserRoles
     {
-        public const string Admin = "admin";
+        public static readonly string Admin = "admin";
 
-        public const string User = "user";
+        public static readonly string User = "user";
     }
 }

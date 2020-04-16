@@ -12,8 +12,10 @@ namespace TrainingProject.Data.Models
         public int Stage { get; set; }
         public int Points { get; set; }
         public string QuestionType { get; set; }
+        public string ImagePath { get; set; }
+
 
         public int TestId { get; set; }
-        public ICollection<AnswerOption> AnswersOptions { get; set; }
+        public ICollection<Answer> Answers { get; set; }
     }
 }

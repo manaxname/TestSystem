@@ -6,6 +6,8 @@ namespace TrainingProject.Common
 {
     public static class QuestionTypes
     {
-        public const string Options = "options";
+        public static readonly string Option = "option";
+
+        public static readonly string Text = "text";
     }
 }
