@@ -14,6 +14,9 @@ using DomainUserAnswer = TrainingProject.Domain.Models.UserAnswer;
 using DomainUserTest = TrainingProject.Domain.Models.UserTest;
 using System.Text.RegularExpressions;
 using TrainingProject.Common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace TrainingProject.Web.Controllers
 {
@@ -29,22 +32,24 @@ namespace TrainingProject.Web.Controllers
 
         private readonly IMapper _mapper;
 
+        private readonly IHostingEnvironment _hostingEnvironment;
+
         public TestController(ITestManager testManager, IMapper mapper,
-            IQuestionManager questionManager, IUserManager userManager, IAnswersManager answersManager)
+            IQuestionManager questionManager, IUserManager userManager, IAnswersManager answersManager, IHostingEnvironment hostingEnvironment)
         {
             _testManager = testManager ?? throw new ArgumentNullException(nameof(testManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _questionManager = questionManager ?? throw new ArgumentNullException(nameof(questionManager));
             _answersManager = answersManager ?? throw new ArgumentNullException(nameof(answersManager));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
         }
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
         public IActionResult ShowTestsToAdmin()
         {
-            List<TestModel> tests = _testManager.GetTests().Select(test => _mapper.Map<TestModel>(test))
-                .ToList();
+            List<TestModel> tests = _testManager.GetTests().Select(test => _mapper.Map<TestModel>(test)).ToList();
 
             return View(tests);
         }
@@ -114,7 +119,16 @@ namespace TrainingProject.Web.Controllers
         public async Task<IActionResult> EditTest(int testId)
         {
             var questions = _questionManager.GetQuestionsByTestId(testId)
-                .Select(question => _mapper.Map<QuestionModel>(question))
+                .Select(question => {
+                    var questionModel = _mapper.Map<QuestionModel>(question);
+
+                    if (!string.IsNullOrWhiteSpace(question.ImageFullName))
+                    {
+                        questionModel.ImageLocation = "/questionImages/" + Path.GetFileName(questionModel.ImageFullName);
+                    }
+
+                    return questionModel;
+                })
                 .ToList();
 
             var test = _testManager.GetTestById(testId);
@@ -138,6 +152,16 @@ namespace TrainingProject.Web.Controllers
         {
             if (ModelState.IsValid && _testManager.IsTestExists(model.TestId))
             {
+                IFormFile image = model.Image;
+
+                if (image != null)
+                {
+                    string imageFullName = Path.Combine(_hostingEnvironment.WebRootPath + "\\questionImages",
+                        Guid.NewGuid() + Path.GetFileName(image.FileName));
+                    image.CopyTo(new FileStream(imageFullName, FileMode.Create));
+                    model.ImageFullName = imageFullName;
+                }
+
                 var domainQuestion = _mapper.Map<DomainQuestion>(model);
 
                 _questionManager.CreateQuestion(domainQuestion);
@@ -231,10 +255,11 @@ namespace TrainingProject.Web.Controllers
             var userQuestionIds = new List<int>();
             DomainQuestion currQuestion = null;
             IEnumerable<UserAnswerModel> currQuestionUserAnswers = null;
+            var currQuestionType = string.Empty;
+            var currQuestionImageLocation = string.Empty;
             int currQuestionStage = 0;
             int secondsLeft = 0;
             DateTime startTime = default;
-            string currQuestionType = string.Empty;
 
             if (userTest.Status == TestStatus.Finished)
             {
@@ -245,13 +270,7 @@ namespace TrainingProject.Web.Controllers
                 _testManager.UpdateUserTestStatus(userId, testId, TestStatus.NotFinished);
 
                 userQuestionIds = CreateUserAnswersAndGetQuestionIds(testId, userId);
-
                 currQuestion = _questionManager.GetQuestionById(userQuestionIds[0]);
-                currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
-                    .Select(x => _mapper.Map<UserAnswerModel>(x));
-                currQuestionStage = currQuestion.Stage;
-                currQuestionType = currQuestion.QuestionType;
-
                 secondsLeft = userTest.TestMinutes * 60;
                 startTime = DateTime.Now;
 
@@ -270,10 +289,15 @@ namespace TrainingProject.Web.Controllers
                     .ForEach(question => userQuestionIds.Add(question.Id));
 
                 currQuestion = _questionManager.GetQuestionById(userQuestionIds[0]);
-                currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
-                    .Select(x => _mapper.Map<UserAnswerModel>(x));
-                currQuestionStage = currQuestion.Stage;
-                currQuestionType = currQuestion.QuestionType;
+            }
+            
+            currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
+                .Select(x => _mapper.Map<UserAnswerModel>(x));
+            currQuestionStage = currQuestion.Stage;
+            currQuestionType = currQuestion.QuestionType;
+            if (!string.IsNullOrWhiteSpace(currQuestion.ImageFullName))
+            {
+                currQuestionImageLocation = "/questionImages/" + Path.GetFileName(currQuestion.ImageFullName);
             }
 
             var startTest = new StartTestModel()
@@ -291,6 +315,7 @@ namespace TrainingProject.Web.Controllers
                 CurrQuestionStage = currQuestion.Stage,
                 CurrQuestionType = currQuestionType,
                 CurrQuestionUserAnswers = currQuestionUserAnswers,
+                CurrQuestionImageLocation = currQuestionImageLocation
             };
 
             ViewData["SubmitButton_1"] = "Next";
@@ -319,13 +344,15 @@ namespace TrainingProject.Web.Controllers
             var currQuestionStage = int.Parse(dictReq["CurrQuestionStage"]);
             var currQuestionType = dictReq["CurrQuestionType"];
             var userQuestionIds = dictReq["UserQuestionIds"].Split(",").Select(x => int.Parse(x)).ToList();
-            int secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
-            string answerKeySubStr = "AnswerId";
+            var answerKeySubStr = "AnswerId";
+            var currQuestionImageLocation = string.Empty;
 
+            int secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
             if (secondsLeft <= 0)
             {
-                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
-                return PartialView("_EndTest");
+                FinishTest(userId, testId);
+
+                return PartialView("_EndTest"); // to redirect from ajax post
             }
 
             if (currQuestionType == QuestionTypes.Option)
@@ -347,74 +374,50 @@ namespace TrainingProject.Web.Controllers
                 _answersManager.UpdateUserAnswerText(userId, answerId, userAnswerText);
             }
 
-            ViewData["SubmitButton_1"] = "Next"; ViewData["SubmitButton_2"] = "Back";
+            ViewData["SubmitButton_1"] = "Next";
+            ViewData["SubmitButton_2"] = "Back";
             SetSubmitButtonsTextAndChangeCurrQuestionStage(submitButtonValue, stagesCount, ref currQuestionStage);
 
             if (submitButtonValue == "Finish" && currQuestionStage == stagesCount)
             {
-                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+                FinishTest(userId, testId);
 
-                var questions = _questionManager.GetUserQuestionsByTestId(userId, testId).ToList();
-                int points = 0;
-                foreach (var question in questions)
-                {
-                    if (question.QuestionType == QuestionTypes.Option)
-                    {
-                        var correctAnswerIds = _answersManager
-                            .GetAnswersByQuestionId(question.Id)
-                            .Where(x => x.IsValid == true)
-                            .Select(x => x.Id)
-                            .ToHashSet();
-                        var userSelectedAnswerIds = _answersManager
-                            .GetUserAnswersByQuestionId(userId, question.Id)
-                            .Where(x => x.isValid == true)
-                            .Select(x => x.AnswerId)
-                            .ToHashSet();
-                        if (correctAnswerIds.SetEquals(userSelectedAnswerIds))
-                        {
-                            points += question.Points;
-                        }
-                    }
-                    else if(question.QuestionType == QuestionTypes.Text)
-                    {
-                        var answer = _answersManager.GetAnswerById(question.Id);
-                        var userAnswer = _answersManager.GetUserAnswersByQuestionId(userId, question.Id).Single();
-                        if (answer.Text == userAnswer.Text)
-                        {
-                            points += question.Points;
-                        }
-                    }
-                }
-
-                _testManager.UpdateUserTestPoints(userId, testId, points);
-                
-                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
                 return PartialView("_EndTest");
             }
 
             var currQuestion = _questionManager.GetQuestionById(userQuestionIds[currQuestionStage - 1]);
             var currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
                 .Select(x => _mapper.Map<UserAnswerModel>(x));
+            if (!string.IsNullOrWhiteSpace(currQuestion.ImageFullName))
+            {
+                currQuestionImageLocation = "/questionImages/" + Path.GetFileName(currQuestion.ImageFullName);
+            }
 
-            ViewData["TestId"] = testId;
-            ViewData["UserId"] = userId;
-            ViewData["StagesCount"] = stagesCount;
-            ViewData["CurrQuestionText"] = currQuestion.Text;
-            ViewData["CurrQuestionStage"] = currQuestion.Stage;
-            ViewData["CurrQuestionType"] = currQuestion.QuestionType;
-            ViewData["CurrQuestionId"] = currQuestion.Id;
+            var startTest = new StartTestModel()
+            {
+                TestId = testId,
+                UserId = userId,
+                StagesCount = stagesCount,
+                TestMinutes = userTest.TestMinutes,
+                SecondsLeft = secondsLeft,
+                UserQuestionIds = dictReq["UserQuestionIds"],
 
-            ViewData["UserQuestionIds"] = dictReq["UserQuestionIds"];
-            ViewData["CurrQuestionUserAnswerss"] = currQuestionUserAnswers;
+                CurrQuestionId = currQuestion.Id,
+                CurrQuestionText = currQuestion.Text,
+                CurrQuestionStage = currQuestion.Stage,
+                CurrQuestionType = currQuestion.QuestionType,
+                CurrQuestionUserAnswers = currQuestionUserAnswers,
+                CurrQuestionImageLocation = currQuestionImageLocation
+            };
 
-            return PartialView("_StartTest");
+            return PartialView("_StartTest", startTest);
         }
 
         [HttpGet]
         [Authorize(Policy = "OnlyForUsers")]
         public async Task<IActionResult> EndTest(int userId , int testId)
         {
-            _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+            FinishTest(userId, testId);
 
             return Ok();
         }
@@ -490,6 +493,45 @@ namespace TrainingProject.Web.Controllers
             {
                 ViewData["SubmitButton_2"] = string.Empty;
             }
+        }
+
+        private void FinishTest(int userId, int testId)
+        {
+            _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+
+            var questions = _questionManager.GetUserQuestionsByTestId(userId, testId).ToList();
+            int points = 0;
+            foreach (var question in questions)
+            {
+                if (question.QuestionType == QuestionTypes.Option)
+                {
+                    var correctAnswerIds = _answersManager
+                        .GetAnswersByQuestionId(question.Id)
+                        .Where(x => x.IsValid == true)
+                        .Select(x => x.Id)
+                        .ToHashSet();
+                    var userSelectedAnswerIds = _answersManager
+                        .GetUserAnswersByQuestionId(userId, question.Id)
+                        .Where(x => x.isValid == true)
+                        .Select(x => x.AnswerId)
+                        .ToHashSet();
+                    if (correctAnswerIds.SetEquals(userSelectedAnswerIds))
+                    {
+                        points += question.Points;
+                    }
+                }
+                else if (question.QuestionType == QuestionTypes.Text)
+                {
+                    var answer = _answersManager.GetAnswerById(question.Id);
+                    var userAnswer = _answersManager.GetUserAnswersByQuestionId(userId, question.Id).Single();
+                    if (answer.Text == userAnswer.Text)
+                    {
+                        points += question.Points;
+                    }
+                }
+            }
+
+            _testManager.UpdateUserTestPoints(userId, testId, points);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace TrainingProject.Domain.Logic
         {
             //configure your Domain Logic Layer services here
             services.AddDataServices(connectionString);
+
             services.AddTransient<IUserManager, UserManager>();
             services.AddTransient<ITestManager, TestManager>();
             services.AddTransient<IQuestionManager, QuestionManager>();

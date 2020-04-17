@@ -49,3 +49,7 @@
 .answer-text {
     font-size: 17px;
 }
+
+.image-container {
+    margin-bottom: 15px !important;
+}

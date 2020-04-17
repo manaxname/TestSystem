@@ -12,7 +12,8 @@ namespace TrainingProject.Domain.Models
         public int Stage { get; set; }
         public int Points { get; set; }
         public string QuestionType { get; set; }
-
+        public string ImageFullName { get; set; }
+        
         public ICollection<Answer> Answers { get; set; }
         public int TestId { get; set; }
     }

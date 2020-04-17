@@ -19,6 +19,7 @@ namespace TrainingProject.Web.Models
         public int CurrQuestionStage { get; set; }
         public string CurrQuestionText { get; set; }
         public string CurrQuestionType { get; set; }
+        public string CurrQuestionImageLocation { get; set; }
         public IEnumerable<UserAnswerModel> CurrQuestionUserAnswers { get; set; }
     }
 }

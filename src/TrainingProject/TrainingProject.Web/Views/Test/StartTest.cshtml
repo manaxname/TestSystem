@@ -22,7 +22,7 @@
         var seconds = @Model.SecondsLeft;
         var display = document.querySelector('#time');
         var getUrl = "EndTest?userId=@Model.UserId&testId=@Model.TestId";
-        var redirectUrl = "Home/Index";
+        var redirectUrl = "Test/ShowTestsToUser";
         startTimer(seconds, display, getUrl, redirectUrl);
     };
 </script>
@@ -52,6 +52,12 @@
         }
 
         <pre class="question-text-block"><span class="questionStyle">@Model.CurrQuestionText</span></pre>
+        @if (!string.IsNullOrWhiteSpace(Model.CurrQuestionImageLocation))
+        {
+            <div class="image-container">
+                <img src="@Model.CurrQuestionImageLocation" alt="Image not loaded"/>
+            </div>
+        }
 
         @if (Model.CurrQuestionType == QuestionTypes.Option)
         {
@@ -89,7 +95,7 @@
             foreach (var item in Model.CurrQuestionUserAnswers)
             {
                 <div class="form-group">
-                    <label asp-for="@item.Text" class="control-label"></label>
+                    Your answer:
                     <input type="text" id="AnswerId@(item.AnswerId)" name="AnswerId@(item.AnswerId)" value="@item.Text">
                 </div>
             }
