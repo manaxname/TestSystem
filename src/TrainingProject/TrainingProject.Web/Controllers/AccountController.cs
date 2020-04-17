@@ -104,6 +104,7 @@ namespace TrainingProject.Web.Controllers
         public ActionResult LogOff()
         {
             HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
             return RedirectToAction("Index", "Home");
         }
 

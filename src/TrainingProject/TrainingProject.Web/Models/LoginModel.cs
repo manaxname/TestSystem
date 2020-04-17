@@ -16,10 +16,5 @@ namespace TrainingProject.Web.Models
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-
-        [Compare("Password", ErrorMessage = "Passwords must match")]
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm Password")]
-        public string ConfirmPassword { get; set; }
     }
 }
