@@ -1,0 +1,122 @@
+﻿@model TestSystem.Web.Models.StartTestModel
+
+@{
+    ViewData["Title"] = "Start Test";
+
+    var userQuestionIds = Model.UserQuestionIds.Split(",").Select(x => int.Parse(x));
+
+    string dangerClass = string.Empty;
+    @if (ViewData["SubmitButton_1"].ToString() == "Finish")
+    {
+        dangerClass = "btn btn-danger";
+    }
+
+    string currentClass = "btn btn-dark";
+    int stage = 1;
+}
+
+<div id="results">
+    <h4>@Model.CurrQuestionStage / @Model.StagesCount</h4>
+    <form asp-action="StartTest" asp-controller="Test"
+          data-ajax="true" data-ajax-method="POST"
+          data-ajax-mode="replace" data-ajax-update="#results"
+          data-ajax-success="success">
+
+        @foreach (var item in userQuestionIds)
+        {
+            if (stage == Model.CurrQuestionStage)
+            {
+                <input type="submit"
+                       name="SubmitButton@(item)"
+                       value="@(stage++)" class="btn btn-primary @currentClass" />
+            }
+            else
+            {
+                <input type="submit"
+                       name="SubmitButton@(item)"
+                       value="@(stage++)" class="btn btn-primary" />
+            }
+        }
+
+        <pre class="question-text-block"><span class="questionStyle">@Model.CurrQuestionText</span></pre>
+        @if (!string.IsNullOrWhiteSpace(Model.CurrQuestionImageLocation))
+        {
+            <div class="image-container">
+                <img src="@Model.CurrQuestionImageLocation" alt="Image not loaded" />
+            </div>
+        }
+
+        @if (Model.CurrQuestionType == QuestionTypes.Option)
+        {
+            @foreach (var item in Model.CurrQuestionUserAnswers)
+            {
+                if (item.isValid)
+                {
+                    <div class="form-group">
+                        <input data-val="true"
+                               id="AnswerId@(item.AnswerId)"
+                               name="AnswerId@(item.AnswerId)"
+                               type="checkbox"
+                               value="true"
+                               checked />
+                        <input name="AnswerId@(item.AnswerId)" type="hidden" value="false" />
+                        <label asp-for="AnswerId+@item.AnswerId">@item.Answer.Text</label>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <input data-val="true"
+                               id="AnswerId@(item.AnswerId)"
+                               name="AnswerId@(item.AnswerId)"
+                               type="checkbox"
+                               value="true" />
+                        <input name="AnswerId@(item.AnswerId)" type="hidden" value="false" />
+                        <label asp-for="AnswerId+@item.AnswerId">@item.Answer.Text</label>
+                    </div>
+                }
+            }
+        }
+        else if (Model.CurrQuestionType == QuestionTypes.Text && Model.CurrQuestionUserAnswers.Count() == 1)
+        {
+            foreach (var item in Model.CurrQuestionUserAnswers)
+            {
+                <div class="form-group">
+                    Your answer:
+                    <input type="text" id="AnswerId@(item.AnswerId)" name="AnswerId@(item.AnswerId)" value="@item.Text">
+                </div>
+            }
+        }
+
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.TestId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.StagesCount" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.UserId" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.CurrQuestionStage" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.CurrQuestionType" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.UserQuestionIds" />
+        </div>
+        <div class="form-group">
+            <input type="hidden" asp-for="@Model.CurrQuestionId" />
+        </div>
+
+        <div class="form-group">
+            @if (!string.IsNullOrWhiteSpace(ViewData["SubmitButton_2"].ToString()) && Model.StagesCount > 1)
+            {
+                <input type="submit" name="SubmitButton_2" id="SubmitButton_2" value="@ViewData["SubmitButton_2"]" class="btn btn-primary" />
+            }
+
+            <input type="submit" name="SubmitButton_1" id="SubmitButton_1" value="@ViewData["SubmitButton_1"]" class="btn btn-primary @dangerClass" />
+        </div>
+    </form>
+</div>

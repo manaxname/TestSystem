@@ -1,0 +1,83 @@
+﻿@model IEnumerable<TestSystem.Web.Models.QuestionModel>
+
+@{
+    ViewData["Title"] = "Edit Tests";
+
+    int testId = 0;
+    if (ViewData.ContainsKey("TestId"))
+    {
+        int.TryParse(ViewData["TestId"].ToString(), out testId);
+    }
+}
+
+<h4>@testId. @ViewData["TestName"] </h4>
+<h4>Questions</h4>
+
+<p>
+    @Html.ActionLink("Create new Question", "CreateQuestion", "Test",
+        new { @TestId = testId }, new { @class = "btn btn-primary" })
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Id)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Stage)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Points)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QuestionType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Text)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ImageLocation)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Stage)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Points)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.QuestionType)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Text)
+                </td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.ImageLocation))
+                    {
+                        <img src="@item.ImageLocation" alt="Image not loaded" height="100" width="100" />
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "EditQuestion", "Test",
+                    new { @TestId = item.TestId, @QuestionId = item.Id, @QuestionType = item.QuestionType }, new { @class = "btn btn-primary" })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div>
+    @Html.ActionLink("Back to Tests", "ShowTestsToAdmin", "Test", null, new { @class = "btn btn-secondary" })
+</div>

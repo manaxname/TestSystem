@@ -1,0 +1,51 @@
+﻿@model IEnumerable<TestSystem.Web.Models.UserTestModel>
+
+@{
+    ViewData["Title"] = "Tests";
+}
+
+<table class="table">
+    <thead>
+    <h4>Tests</h4>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.TestName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TestName)
+                </td>
+
+                @if (item.Status == TestStatus.NotStarted)
+                {
+                    <td>
+                        <span class="text-primary points-text-style">Not Started</span>
+                        @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                    </td>
+                }
+                else if (item.Status == TestStatus.NotFinished)
+                {
+                    <td>
+                        <span class="text-warning points-text-style">Not Finished</span>
+                        @Html.ActionLink("Continue", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                    </td>
+                }
+                else if (item.Status == TestStatus.Finished)
+                {
+                <td>
+                    <span class="text-success points-text-style">Finished</span>,
+                    Your points: <span class="points-text-style">@item.Points</span>
+                </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
