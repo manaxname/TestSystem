@@ -11,9 +11,9 @@ using DomainQuestion = TestSystem.Domain.Models.Question;
 using DomainAnswer = TestSystem.Domain.Models.Answer;
 using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
+using DomainTest = TestSystem.Domain.Models.Test;
 using TestSystem.Common;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Hosting;
 using System.IO;
 
 namespace TestSystem.Web.Controllers
@@ -30,6 +30,8 @@ namespace TestSystem.Web.Controllers
 
         private readonly IMapper _mapper;
 
+        private readonly int _toSecondsConstant = 60;
+
         public TestController(ITestManager testManager, IMapper mapper, IQuestionManager questionManager,
             IUserManager userManager, IAnswersManager answersManager)
         {
@@ -42,28 +44,30 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public IActionResult ShowTestsToAdmin()
+        public async Task<IActionResult> ShowTestsToAdmin()
         {
-            List<TestModel> tests = _testManager.GetTests().Select(test => _mapper.Map<TestModel>(test)).ToList();
+            IEnumerable<TestModel> tests = (await _testManager.GetTestsAsync())
+                .Select(test => _mapper.Map<TestModel>(test));
 
             return View(tests);
         }
 
         [HttpGet]
         [Authorize(Policy = "OnlyForUsers")]
-        public IActionResult ShowTestsToUser()
+        public async Task<IActionResult> ShowTestsToUser()
         {
-            var userEmail = User.Identity.Name;
-            var userId = _userManager.GetUserId(userEmail);
+            string userEmail = User.Identity.Name;
+            int userId = await _userManager.GetUserIdAsync(userEmail);
 
-            var allTestIds = _testManager.GetTests().Select(x => x.Id).ToList();
-            var userTestIds = _testManager.GetUserTests(userId).Select(x => x.TestId).ToList();
+            List<int> allTestIds = (await _testManager.GetTestsAsync()).Select(x => x.Id).ToList();
+            List<int> userTestIds = (await _testManager.GetUserTestsAsync(userId)).Select(x => x.TestId).ToList();
 
-            foreach (var testId in allTestIds)
+            foreach (int testId in allTestIds)
             {
                 if (!userTestIds.Contains(testId))
                 {
-                    var test = _testManager.GetTestById(testId);
+                    DomainTest test = await _testManager.GetTestByIdAsync(testId);
+
                     var domainUserTest = new DomainUserTest
                     {
                         Status = TestStatus.NotStarted,
@@ -72,15 +76,15 @@ namespace TestSystem.Web.Controllers
                         TestMinutes = test.Minutes
                     };
 
-                    if (!_testManager.IsUserTestExists(userId, testId))
+                    if (! await _testManager.IsUserTestExistsAsync(userId, testId))
                     {
-                        _testManager.CreateUserTest(domainUserTest);
+                        await _testManager.CreateUserTestAsync(domainUserTest);
                     }
                 }
             }
 
-            var userTests = _testManager.GetUserTests(userId)
-                .Select(x => _mapper.Map<UserTestModel>(x));
+            IReadOnlyCollection<UserTestModel> userTests = (await _testManager.GetUserTestsAsync(userId))
+                .Select(x => _mapper.Map<UserTestModel>(x)).ToList();
 
             return View(userTests);
         }
@@ -99,7 +103,7 @@ namespace TestSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                _testManager.CreateTest(model.Name, model.Minutes);
+                await _testManager.CreateTestAsync(model.Name, model.Minutes);
 
                 return RedirectToAction("ShowTestsToAdmin", "Test");
             }
@@ -113,8 +117,9 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> EditTest(int testId)
         {
-            var questions = _questionManager.GetQuestionsByTestId(testId)
-                .Select(question => {
+            List<QuestionModel> questions = (await _questionManager.GetQuestionsByTestIdAsync(testId))
+                .Select(question => 
+                {
                     var questionModel = _mapper.Map<QuestionModel>(question);
 
                     if (!string.IsNullOrWhiteSpace(question.ImageFullName))
@@ -127,7 +132,7 @@ namespace TestSystem.Web.Controllers
                 })
                 .ToList();
 
-            var test = _testManager.GetTestById(testId);
+            DomainTest test = await _testManager.GetTestByIdAsync(testId);
 
             ViewData["TestName"] = test.Name;
             ViewData["TestId"] = test.Id;
@@ -137,7 +142,7 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> CreateQuestion(int testId)
+        public IActionResult CreateQuestion(int testId)
         {
             return View();
         }
@@ -146,7 +151,7 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> CreateQuestion(QuestionModel model)
         {
-            if (ModelState.IsValid && _testManager.IsTestExists(model.TestId))
+            if (ModelState.IsValid && await _testManager.IsTestExistsAsync(model.TestId))
             {
                 IFormFile image = model.Image;
 
@@ -160,7 +165,7 @@ namespace TestSystem.Web.Controllers
 
                 var domainQuestion = _mapper.Map<DomainQuestion>(model);
 
-                _questionManager.CreateQuestion(domainQuestion);
+                await _questionManager.CreateQuestionAsync(domainQuestion);
 
                 return RedirectToAction("EditTest", "Test", new { @TestId = model.TestId });
             }
@@ -174,31 +179,30 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> EditQuestion(int testId, int questionId, string questionType)
         {
-            if (!_testManager.IsTestExists(testId))
+            if (! await _testManager.IsTestExistsAsync(testId))
             {
-                return BadRequest(testId);
+                return BadRequest();
             }
 
-            if (!_questionManager.IsQuestionExists(questionId))
+            if (! await _questionManager.IsQuestionExistsAsync(questionId))
             {
-                return BadRequest(questionId);
+                return BadRequest();
             }
 
-            if (_questionManager.GetQuestionTypeById(questionId) != questionType)
+            if (await _questionManager.GetQuestionTypeByIdAsync(questionId) != questionType)
             {
-                return BadRequest(questionType);
+                return BadRequest();
             }
 
-            var answers = _answersManager
-                .GetAnswersByQuestionId(questionId)
+            List<AnswerModel> answers = (await _answersManager.GetAnswersByQuestionIdAsync(questionId))
                 .Select(answer => _mapper.Map<AnswerModel>(answer))
                 .ToList();
 
             ViewData["TestId"] = testId;
             ViewData["QuestionId"] = questionId;
             ViewData["QuestionType"] = questionType;
-            ViewData["QuestionText"] = _questionManager.GetQuestionTextById(questionId);
-            ViewData["AnswersCount"] = _answersManager.GetAnswerCountByQuestionId(questionId);
+            ViewData["QuestionText"] = await _questionManager.GetQuestionTextByIdAsync(questionId);
+            ViewData["AnswersCount"] = await _answersManager.GetAnswerCountByQuestionIdAsync(questionId);
 
             return View(answers);
         }
@@ -207,6 +211,21 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> CreateAnswer(int testId, int questionId, string questionType)
         {
+            if (!await _testManager.IsTestExistsAsync(testId))
+            {
+                return BadRequest();
+            }
+
+            if (!await _questionManager.IsQuestionExistsAsync(questionId))
+            {
+                return BadRequest();
+            }
+
+            if (await _questionManager.GetQuestionTypeByIdAsync(questionId) != questionType)
+            {
+                return BadRequest();
+            }
+
             ViewData["TestId"] = testId;
             ViewData["QuestionId"] = questionId;
             ViewData["QuestionType"] = questionType;
@@ -218,17 +237,17 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> CreateAnswer(AnswerModel model)
         {
-            if (ModelState.IsValid && _questionManager.IsQuestionExists(model.QuestionId))
+            if (ModelState.IsValid && await _questionManager.IsQuestionExistsAsync(model.QuestionId))
             {
                 var domainAnswer = _mapper.Map<DomainAnswer>(model);
-                var answersCount = _answersManager.GetAnswerCountByQuestionId(model.QuestionId);
+                int answersCount = await _answersManager.GetAnswerCountByQuestionIdAsync(model.QuestionId);
 
                 if (model.QuestionType == QuestionTypes.Text && answersCount >= 1)
                 {
                     return BadRequest();
                 }
 
-                _answersManager.CreateAnswer(domainAnswer);
+                await _answersManager.CreateAnswerAsync(domainAnswer);
 
                 return RedirectToAction("EditQuestion", "Test", 
                     new { @TestId = model.TestId, @QuestionId = model.QuestionId, @QuestionType = model.QuestionType });
@@ -243,16 +262,16 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForUsers")]
         public async Task<IActionResult> StartTest(int testId)
         {
-            var userEmail = User.Identity.Name;
-            var userId = _userManager.GetUserId(userEmail);
-            var userTest = _testManager.GetUserTest(userId, testId);
-            var testStages = _questionManager.GetTestStagesByTestId(testId).ToList();
-            var stagesCount = testStages.Count;
+            string  userEmail = User.Identity.Name;
+            int userId = await _userManager.GetUserIdAsync(userEmail);
+            DomainUserTest userTest = await _testManager.GetUserTestAsync(userId, testId);
+            List<int> testStages = (await _questionManager.GetTestStagesByTestIdAsync(testId)).ToList();
+            int stagesCount = testStages.Count;
             var userQuestionIds = new List<int>();
             DomainQuestion currQuestion = null;
-            IEnumerable<UserAnswerModel> currQuestionUserAnswers = null;
-            var currQuestionType = string.Empty;
-            var currQuestionImageLocation = string.Empty;
+            List<UserAnswerModel> currQuestionUserAnswers = null;
+            string currQuestionType = string.Empty;
+            string currQuestionImageLocation = string.Empty;
             int currQuestionStage = 0;
             int secondsLeft = 0;
             DateTime startTime = default;
@@ -263,34 +282,38 @@ namespace TestSystem.Web.Controllers
             }
             else if (userTest.Status == TestStatus.NotStarted)
             {
-                _testManager.UpdateUserTestStatus(userId, testId, TestStatus.NotFinished);
+                await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.NotFinished);
 
-                userQuestionIds = CreateUserAnswersAndGetQuestionIds(testId, userId);
-                currQuestion = _questionManager.GetQuestionById(userQuestionIds[0]);
-                secondsLeft = userTest.TestMinutes * 60;
+                userQuestionIds = await CreateUserAnswersAndGetQuestionIdsAsync(testId, userId);
+                currQuestion = await _questionManager.GetQuestionByIdAsync(userQuestionIds[0]);
+                secondsLeft = userTest.TestMinutes * _toSecondsConstant;
                 startTime = DateTime.Now;
 
-                _testManager.UpdateUserTestStartTime(userId, testId, startTime);
+                await _testManager.UpdateUserTestStartTimeAsync(userId, testId, startTime);
             }
             else if (userTest.Status == TestStatus.NotFinished)
             {
-                secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
+                secondsLeft = userTest.TestMinutes * _toSecondsConstant - 
+                    Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
+
                 if (secondsLeft <= 0)
                 {
-                    _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+                    await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.Finished);
+
                     return BadRequest("Time's been expired.");
                 }
 
-                _questionManager.GetUserQuestionsByTestId(userId, testId).ToList()
+                (await _questionManager.GetUserQuestionsByTestIdAsync(userId, testId)).ToList()
                     .ForEach(question => userQuestionIds.Add(question.Id));
 
-                currQuestion = _questionManager.GetQuestionById(userQuestionIds[0]);
+                currQuestion = await _questionManager.GetQuestionByIdAsync(userQuestionIds[0]);
             }
             
-            currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
-                .Select(x => _mapper.Map<UserAnswerModel>(x));
+            currQuestionUserAnswers = (await _answersManager.GetUserAnswersByQuestionIdAsync(userId, currQuestion.Id))
+                .Select(x => _mapper.Map<UserAnswerModel>(x)).ToList();
             currQuestionStage = currQuestion.Stage;
             currQuestionType = currQuestion.QuestionType;
+
             if (!string.IsNullOrWhiteSpace(currQuestion.ImageFullName))
             {
                 currQuestionImageLocation = $"/{WebExtensions.ImagesFolderName}/" + Path.GetFileName(currQuestion.ImageFullName);
@@ -329,37 +352,39 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForUsers")]
         public async Task<IActionResult> StartTest()
         {
-            var dictReq = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
-            var submitButtonKey = dictReq.Keys.Single(x => x.Contains("SubmitButton"));
-            var submitButtonValue = dictReq[submitButtonKey];
-            var testId = int.Parse(dictReq["TestId"]);
-            var userId = int.Parse(dictReq["UserId"]);
-            var userTest = _testManager.GetUserTest(userId, testId);
-            var stagesCount = int.Parse(dictReq["StagesCount"]);
-            var currQuestionId = int.Parse(dictReq["CurrQuestionId"]);
-            var currQuestionStage = int.Parse(dictReq["CurrQuestionStage"]);
-            var currQuestionType = dictReq["CurrQuestionType"];
-            var userQuestionIds = dictReq["UserQuestionIds"].Split(",").Select(x => int.Parse(x)).ToList();
+            Dictionary<string, string> dictReq = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
+            string submitButtonKey = dictReq.Keys.Single(x => x.Contains("SubmitButton"));
+            string submitButtonValue = dictReq[submitButtonKey];
+            int testId = int.Parse(dictReq["TestId"]);
+            int userId = int.Parse(dictReq["UserId"]);
+            DomainUserTest userTest = await _testManager.GetUserTestAsync(userId, testId);
+            int stagesCount = int.Parse(dictReq["StagesCount"]);
+            int currQuestionId = int.Parse(dictReq["CurrQuestionId"]);
+            int currQuestionStage = int.Parse(dictReq["CurrQuestionStage"]);
+            string currQuestionType = dictReq["CurrQuestionType"];
+            List<int> userQuestionIds = dictReq["UserQuestionIds"].Split(",").Select(x => int.Parse(x)).ToList();
             var answerKeySubStr = "AnswerId";
             var currQuestionImageLocation = string.Empty;
 
             int secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
             if (secondsLeft <= 0)
             {
-                FinishTest(userId, testId);
+                await FinishTestAsync(userId, testId);
 
                 return PartialView("_EndTest"); // to redirect from ajax post
             }
 
             if (currQuestionType == QuestionTypes.Option)
             {
-                dictReq.Keys.Where(x => x.Contains(answerKeySubStr)).ToList()
-                    .ForEach(key => {
-                        int answerId = int.Parse(key.Substring(answerKeySubStr.Length));
-                        bool isValid = dictReq[key].Contains("true") ? true : false;
+                List<string> answersKeys = dictReq.Keys.Where(x => x.Contains(answerKeySubStr)).ToList();
 
-                        _answersManager.UpdateUserAnswerValid(userId, answerId, isValid);
-                    });
+                foreach (string answerKey in answersKeys)
+                {
+                    int answerId = int.Parse(answerKey.Substring(answerKeySubStr.Length));
+                    bool isValid = dictReq[answerKey].Contains("true") ? true : false;
+
+                    await _answersManager.UpdateUserAnswerValidAsync(userId, answerId, isValid);
+                }
             }
             else if (currQuestionType == QuestionTypes.Text)
             {
@@ -367,7 +392,7 @@ namespace TestSystem.Web.Controllers
                 int answerId = int.Parse(answerKey.Substring(answerKeySubStr.Length));
                 string userAnswerText = dictReq[answerKey];
 
-                _answersManager.UpdateUserAnswerText(userId, answerId, userAnswerText);
+                await _answersManager.UpdateUserAnswerTextAsync(userId, answerId, userAnswerText);
             }
 
             ViewData["SubmitButton_1"] = "Next";
@@ -376,14 +401,16 @@ namespace TestSystem.Web.Controllers
 
             if (submitButtonValue == "Finish" && currQuestionStage == stagesCount)
             {
-                FinishTest(userId, testId);
+                await FinishTestAsync(userId, testId);
 
                 return PartialView("_EndTest");
             }
 
-            var currQuestion = _questionManager.GetQuestionById(userQuestionIds[currQuestionStage - 1]);
-            var currQuestionUserAnswers = _answersManager.GetUserAnswersByQuestionId(userId, currQuestion.Id)
-                .Select(x => _mapper.Map<UserAnswerModel>(x));
+            DomainQuestion currQuestion = await _questionManager.GetQuestionByIdAsync(userQuestionIds[currQuestionStage - 1]);
+            List<UserAnswerModel> currQuestionUserAnswers = (await _answersManager.GetUserAnswersByQuestionIdAsync(userId, currQuestion.Id))
+                .Select(x => _mapper.Map<UserAnswerModel>(x))
+                .ToList();
+
             if (!string.IsNullOrWhiteSpace(currQuestion.ImageFullName))
             {
                 currQuestionImageLocation = $"/{WebExtensions.ImagesFolderName}/" +  Path.GetFileName(currQuestion.ImageFullName);
@@ -413,37 +440,37 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForUsers")]
         public async Task<IActionResult> EndTest(int userId , int testId)
         {
-            FinishTest(userId, testId);
+            await FinishTestAsync(userId, testId);
 
             return Ok();
         }
 
-        private List<int> CreateUserAnswersAndGetQuestionIds(int testId, int userId)
+        private async Task<List<int>> CreateUserAnswersAndGetQuestionIdsAsync(int testId, int userId)
         {
             var questionIds = new List<int>();
-            var stagesCount = _questionManager.GetTestStagesByTestId(testId).ToList().Count;
+            int stagesCount = (await _questionManager.GetTestStagesByTestIdAsync(testId)).ToList().Count;
 
             for (int stage = 1; stage <= stagesCount; stage++)
             {
-                int questionId = _questionManager.GetRandomQuestionInTestByStage(testId, stage).Id;
-                string questionType = _questionManager.GetQuestionTypeById(questionId);
+                int questionId = (await _questionManager.GetRandomQuestionInTestByStageAsync(testId, stage)).Id;
 
-                _answersManager.GetAnswersByQuestionId(questionId).ToList()
-                    .ForEach(answer =>
+                List<DomainAnswer> answers = (await _answersManager.GetAnswersByQuestionIdAsync(questionId)).ToList();
+
+                foreach (DomainAnswer answer in answers)
+                {
+                    var userAnswer = new DomainUserAnswer
                     {
-                        var userAnswer = new DomainUserAnswer
-                        {
-                            isValid = false,
-                            Text = string.Empty,
-                            UserId = userId,
-                            AnswerId = answer.Id
-                        };
+                        isValid = false,
+                        Text = string.Empty,
+                        UserId = userId,
+                        AnswerId = answer.Id
+                    };
 
-                        if (!_answersManager.IsUserAnswerExists(userId, answer.Id))
-                        {
-                            _answersManager.CreateUserAnswer(userAnswer);
-                        }
-                    });
+                    if (! await _answersManager.IsUserAnswerExistsAsync(userId, answer.Id))
+                    {
+                        await _answersManager.CreateUserAnswerAsync(userAnswer);
+                    }
+                }
 
                 questionIds.Add(questionId);
             }
@@ -491,23 +518,21 @@ namespace TestSystem.Web.Controllers
             }
         }
 
-        private void FinishTest(int userId, int testId)
+        private async Task FinishTestAsync(int userId, int testId)
         {
-            _testManager.UpdateUserTestStatus(userId, testId, TestStatus.Finished);
+            await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.Finished);
 
-            var questions = _questionManager.GetUserQuestionsByTestId(userId, testId).ToList();
+            List<DomainQuestion> questions = (await _questionManager.GetUserQuestionsByTestIdAsync(userId, testId)).ToList();
             int points = 0;
             foreach (var question in questions)
             {
                 if (question.QuestionType == QuestionTypes.Option)
                 {
-                    var correctAnswerIds = _answersManager
-                        .GetAnswersByQuestionId(question.Id)
+                    var correctAnswerIds = (await _answersManager.GetAnswersByQuestionIdAsync(question.Id))
                         .Where(x => x.IsValid == true)
                         .Select(x => x.Id)
                         .ToHashSet();
-                    var userSelectedAnswerIds = _answersManager
-                        .GetUserAnswersByQuestionId(userId, question.Id)
+                    var userSelectedAnswerIds = (await _answersManager.GetUserAnswersByQuestionIdAsync(userId, question.Id))
                         .Where(x => x.isValid == true)
                         .Select(x => x.AnswerId)
                         .ToHashSet();
@@ -518,8 +543,10 @@ namespace TestSystem.Web.Controllers
                 }
                 else if (question.QuestionType == QuestionTypes.Text)
                 {
-                    var answer = _answersManager.GetAnswerById(question.Id);
-                    var userAnswer = _answersManager.GetUserAnswersByQuestionId(userId, question.Id).Single();
+                    DomainAnswer answer = (await _answersManager.GetAnswersByQuestionIdAsync(question.Id)).Single();
+                    DomainUserAnswer userAnswer = (await _answersManager.GetUserAnswersByQuestionIdAsync(userId, question.Id))
+                        .Single();
+
                     if (answer.Text == userAnswer.Text)
                     {
                         points += question.Points;
@@ -527,7 +554,7 @@ namespace TestSystem.Web.Controllers
                 }
             }
 
-            _testManager.UpdateUserTestPoints(userId, testId, points);
+            await _testManager.UpdateUserTestPointsAsync(userId, testId, points);
         }
     }
 }

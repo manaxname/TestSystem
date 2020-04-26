@@ -35,6 +35,20 @@ namespace TestSystem.Web
             services.AddDataServices(connectionString);
             services.AddDomainServices();
             services.AddWebServices(imagesFolderFullName);
+
+
+            var adminEmail = "adminIsCoolDude123@gmail.com";
+            var adminPassword = "adminIsCoolDude123!!!";
+            var adminRole = UserRoles.Admin;
+
+            var serviceProvider = services.BuildServiceProvider();
+            var userManager = serviceProvider.GetRequiredService<IUserManager>();
+
+            if (!userManager.IsUserExistsAsync(adminEmail).GetAwaiter().GetResult())
+            {
+                userManager.CreateUserAsync(adminEmail, adminPassword, adminRole).GetAwaiter().GetResult();
+            }
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

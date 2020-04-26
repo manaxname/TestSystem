@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using TestSystem.Common;
 using TestSystem.Domain.Models;
 
@@ -6,17 +7,19 @@ namespace TestSystem.Domain.Logic.Interfaces
 {
     public interface IQuestionManager
     {
-        int CreateQuestion(Question user);
-        int CreateQuestion(int testId, string text, int stage, int points, string questionType);
-        Question GetQuestionById(int id);
-        bool IsQuestionExists(int id);
-        IEnumerable<Question> GetQuestionsByTestId(int testId);
-        string GetQuestionTypeById(int id);
-        string GetQuestionTextById(int id);
-        int GetQuestionCountByTestId(int testId);
-        IEnumerable<int> GetTestStagesByTestId(int testId);
-        Question GetRandomQuestionInTestByStage(int testId, int stage);
-        void DeleteQuestion(int id);
-        public IEnumerable<Question> GetUserQuestionsByTestId(int userId, int testId);
+        Task<int> CreateQuestionAsync(Question user);
+        Task<int> CreateQuestionAsync(int testId, string text, int stage, int points, string questionType);
+        Task<Question> GetQuestionByIdAsync(int id);
+        Task<bool> IsQuestionExistsAsync(int id);
+        Task<IReadOnlyCollection<Question>> GetQuestionsByTestIdAsync(int testId);
+        Task<string> GetQuestionTypeByIdAsync(int id);
+        Task<string> GetQuestionTextByIdAsync(int id);
+        Task<int> GetQuestionCountByTestIdAsync(int testId);
+        Task<IReadOnlyCollection<int>> GetTestStagesByTestIdAsync(int testId);
+        Task<Question> GetRandomQuestionInTestByStageAsync(int testId, int stage);
+        Task DeleteQuestionAsync(int id);
+        Task<IReadOnlyCollection<Question>> GetUserQuestionsByTestIdAsync(int userId, int testId);
+        Task ThrowIfQuestionNotExistsAsync(int testId);
+        Task ThrowIfQuestionAlreadyExistsAsync(int testId);
     }
 }

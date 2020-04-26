@@ -11,184 +11,177 @@ using DataTest = TestSystem.Data.Models.Test;
 using DomainTest = TestSystem.Domain.Models.Test;
 using DataUserTest = TestSystem.Data.Models.UserTest;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
+using System.Threading.Tasks;
+using TestSystem.Common.CustomExceptions;
+using AutoMapper.QueryableExtensions;
 
 namespace TestSystem.Domain.Logic.Managers
 {
     public class TestManager : ITestManager
     {
-        private readonly ITestSystemContext _tpContext;
+        private readonly ITestSystemContext _dbContext;
 
         private readonly IUserManager _userManager;
 
         private IMapper _mapper;
 
-        public TestManager(ITestSystemContext tpContext, IUserManager userManager, IMapper mapper)
+        public TestManager(ITestSystemContext dbContext, IUserManager userManager, IMapper mapper)
         {
-            _tpContext = tpContext ?? throw new ArgumentNullException(nameof(tpContext));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public int CreateTest(string name, int time)
+        public async Task<int> CreateTestAsync(string name, int time)
         {
             var domainTest = Helper.CreateDomainTest(name, time);
+
             var dataTest = _mapper.Map<DataTest>(domainTest);
 
-            _tpContext.Tests.Add(dataTest);
+            _dbContext.Tests.Add(dataTest);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int CreateUserTest(DomainUserTest userTest)
+        public async Task<int> CreateUserTestAsync(DomainUserTest userTest)
         {
-            if (!_userManager.IsUserExists(userTest.UserId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "User does't exist.");
-            }
-
-            if (!IsTestExists(userTest.TestId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
+            await _userManager.ThrowIfUserNotExistsAsync(userTest.UserId);
+            await ThrowIfTestNotExistsAsync(userTest.TestId);
 
             var dataUserTest = _mapper.Map<DataUserTest>(userTest);
 
-            _tpContext.UserTests.Add(dataUserTest);
+            _dbContext.UserTests.Add(dataUserTest);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public void DeleteTest(int id)
+        public async Task DeleteTestAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public DomainTest GetTestById(int id)
+        public async Task<DomainTest> GetTestByIdAsync(int id)
         {
-            if (!IsTestExists(id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
+            var dataTest = await _dbContext.Tests.FirstOrDefaultAsync(test => test.Id == id);
 
-            var dataTest = _tpContext.Tests.First(test => test.Id == id);
+            if (dataTest == null)
+            {
+                throw new TestNotFoundException(id.ToString());
+            }
 
             var domainTest = _mapper.Map<DomainTest>(dataTest);
 
             return domainTest;
         }
 
-        public IEnumerable<DomainTest> GetTests()
+        public async Task<IReadOnlyCollection<DomainTest>> GetTestsAsync()
         {
-            var domainTests = _tpContext.Tests.Select(test => _mapper.Map<DomainTest>(test));
-
-            if (domainTests == null)
-            {
-                return Enumerable.Empty<DomainTest>();
-            }
+            var domainTests = await _dbContext.Tests.ProjectTo<DomainTest>(_mapper.ConfigurationProvider).ToListAsync();
 
             return domainTests;
         }
 
-        public DomainUserTest GetUserTest(int userId, int testId)
+        public async Task<DomainUserTest> GetUserTestAsync(int userId, int testId)
         {
-            if (!IsUserTestExists(userId, testId))
+            var dataUserTest = await _dbContext.UserTests
+                .SingleOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
+
+            if (dataUserTest == null)
             {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "UserTest does't exist.");
+                throw new UserTestNotFoundException($"userId: {userId}, testId: {testId}");
             }
 
-            if (!IsTestExists(testId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
-
-            var dataUserTest = _tpContext.UserTests
-                .SingleOrDefault(x => x.UserId == userId && x.TestId == testId);
             var domainUserTest = _mapper.Map<DomainUserTest>(dataUserTest);
 
             return domainUserTest;
         }
 
-        public IEnumerable<DomainUserTest> GetUserTests(int userId)
+        public async Task<IReadOnlyCollection<DomainUserTest>> GetUserTestsAsync(int userId)
         {
-            if (!_userManager.IsUserExists(userId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "User does't exist.");
-            }
+            await _userManager.ThrowIfUserNotExistsAsync(userId);
 
-            var domainUserTests = _tpContext.UserTests
+            var domainUserTests = await _dbContext.UserTests
                 .Include(x => x.User)
                 .Include(x => x.Test)
                 .Where(x => x.UserId == userId)
-                .Select(x => _mapper.Map<DomainUserTest>(x));
+                .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .ToListAsync();
 
             return domainUserTests;
         }
 
-        public bool IsTestExists(int id)
+        public async Task<bool> IsTestExistsAsync(int id)
         {
-            return _tpContext.Tests.Any(test => test.Id == id);
+            return await _dbContext.Tests.AnyAsync(test => test.Id == id);
         }
 
-        public bool IsUserTestExists(int usetId, int testId)
+        public async Task<bool> IsUserTestExistsAsync(int usetId, int testId)
         {
-            return _tpContext.UserTests.Any(x => x.UserId == usetId && x.TestId == testId);
+            return await _dbContext.UserTests.AnyAsync(x => x.UserId == usetId && x.TestId == testId);
         }
 
-        public int UpdateUserTestPoints(int userId, int testId, int points)
+        public async Task<int> UpdateUserTestPointsAsync(int userId, int testId, int points)
         {
-            if (!IsUserTestExists(userId, testId))
+            var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
+
+            if (dataUserTest == null)
             {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "UserTest does't exist.");
+                throw new UserTestNotFoundException($"userId: {userId}, testId: {testId}");
             }
 
-            var userTest = _tpContext.UserTests.Single(x => x.UserId == userId && x.TestId == testId);
+            dataUserTest.Points = points;
 
-            userTest.Points = points;
+            _dbContext.UserTests.Update(dataUserTest);
 
-            _tpContext.UserTests.Update(userTest);
-
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int UpdateUserTestStartTime(int userId, int testId, DateTime time)
+        public async Task<int> UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time)
         {
-            if (!IsUserTestExists(userId, testId))
+            var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
+
+            if (dataUserTest == null)
             {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "UserTest does't exist.");
+                throw new UserTestNotFoundException($"userId: {userId}, testId: {testId}");
             }
 
-            var userTest = _tpContext.UserTests.Single(x => x.UserId == userId && x.TestId == testId);
+            dataUserTest.StartTime = time;
 
-            userTest.StartTime = time;
+            _dbContext.UserTests.Update(dataUserTest);
 
-            _tpContext.UserTests.Update(userTest);
-
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int UpdateUserTestStatus(int userId, int testId, string status)
+        public async Task<int> UpdateUserTestStatusAsync(int userId, int testId, string status)
         {
-            if (!IsUserTestExists(userId, testId))
+            var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
+
+            if (dataUserTest == null)
             {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "UserTest does't exist.");
+                throw new UserTestNotFoundException($"userId: {userId}, testId: {testId}");
             }
 
-            var userTest = _tpContext.UserTests.Single(x => x.UserId == userId && x.TestId == testId);
+            dataUserTest.Status = status;
 
-            userTest.Status = status;
+            _dbContext.UserTests.Update(dataUserTest);
 
-            _tpContext.UserTests.Update(userTest);
+            return await _dbContext.SaveChangesAsync(default);
+        }
 
-            return _tpContext.SaveChangesAsync(default).Result;
+        public async Task ThrowIfTestNotExistsAsync(int testId)
+        {
+            if (! await IsTestExistsAsync(testId))
+            {
+                throw new TestNotFoundException(testId.ToString());
+            }
+        }
+
+        public async Task ThrowIfTestAlreadyExistsAsync(int testId)
+        {
+            if (await IsTestExistsAsync(testId))
+            {
+                throw new TestAlreadyExsitsException(testId.ToString());
+            }
         }
     }
 }

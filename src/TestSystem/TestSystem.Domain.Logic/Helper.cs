@@ -10,30 +10,26 @@ namespace TestSystem.Domain.Logic
     {
         public static User CreateDomainUser(string email, string passwordHash, string role)
         {
-            var user = new User
+            return new User
             {
                 Email = email,
                 PasswordHash = passwordHash,
                 Role = role
-            };
-
-            return user;
+            }; ;
         }
 
         public static Test CreateDomainTest(string name, int time)
         {
-            var test = new Test
+            return new Test
             {
                 Name = name,
                 Minutes = time
             };
-
-            return test;
         }
 
         public static Question CreateDomainQuestion(string text, int stage, int points, string questionType, int testId)
         {
-            var question = new Question
+            return new Question
             {
                 Text = text,
                 Stage = stage,
@@ -41,45 +37,37 @@ namespace TestSystem.Domain.Logic
                 QuestionType = questionType,
                 TestId = testId,
             };
-
-            return question;
         }
 
-        public static Answer CreateDomainAnswerWith(string text, bool isValid, int QuestionId)
+        public static Answer CreateDomainAnswer(string text, bool isValid, int QuestionId)
         {
-            var answerWith = new Answer
+            return new Answer
             {
                 Text = text,
                 IsValid = isValid,
                 QuestionId = QuestionId
             };
-
-            return answerWith;
         }
 
-        public static UserAnswer CreateDomainUserAnswerWith(int userId, int answerId, bool isValid, string text)
+        public static UserAnswer CreateDomainUserAnswer(int userId, int answerId, bool isValid, string text)
         {
-            var userAnswerWith = new UserAnswer
+            return new UserAnswer
             {
                 UserId = userId,
                 AnswerId = answerId,
                 isValid = isValid,
                 Text = text
             };
-
-            return userAnswerWith;
         }
 
         public static UserTest CreateDomainUserTest(int userId, int testId, string status)
         {
-            var userTest = new UserTest
+            return new UserTest
             {
                 UserId = userId,
                 TestId = testId,
                 Status = status
             };
-
-            return userTest;
         }
     }
 }

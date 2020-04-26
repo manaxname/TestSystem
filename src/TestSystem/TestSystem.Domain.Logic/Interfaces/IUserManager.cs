@@ -1,17 +1,22 @@
-﻿using TestSystem.Domain.Models;
+﻿using System.Threading.Tasks;
+using TestSystem.Domain.Models;
 
 namespace TestSystem.Domain.Logic.Interfaces
 {
     public interface IUserManager
     {
-        int CreateUser(string email, string password, string role);
-        int CreateUser(User user);
-        void DeleteUser(string email);
-        User GetUserByEmail(string email);
-        User GetUserById(int id);
-        bool IsUserExists(int id);
-        bool IsUserExists(string email);
-        int GetUserId(string email);
+        Task<int> CreateUserAsync(string email, string password, string role);
+        Task<int> CreateUserAsync(User user);
+        Task DeleteUserAsync(string email);
+        Task<User> GetUserByEmailAsync(string email);
+        Task<User> GetUserByIdAsync(int id);
+        Task<bool> IsUserExistsAsync(int id);
+        Task<bool> IsUserExistsAsync(string email);
+        Task<int> GetUserIdAsync(string email);
         bool ValidateUserPassword(User user, string userPassword);
+        Task ThrowIfUserNotExistsAsync(string email);
+        Task ThrowIfUserNotExistsAsync(int id);
+        Task ThrowIfUserAlreadyExistsAsync(string email);
+        Task ThrowIfUserAlreadyExistsAsync(int id);
     }
 }

@@ -8,6 +8,7 @@ using TestSystem.Domain.Logic.Mappers;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace TestSystem.Web
 {
@@ -36,13 +37,13 @@ namespace TestSystem.Web
             services.AddSession(s => {
                 s.IdleTimeout = TimeSpan.FromMinutes(int.MaxValue);
             });
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(s =>
                 {
-                    s.AccessDeniedPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
-                    s.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
+                    s.AccessDeniedPath = new PathString("/Account/Login");
+                    s.LoginPath = new PathString("/Account/Login");
                 });
             services.AddAuthorization(opts => {
                 opts.AddPolicy("OnlyForAdmins", policy => {
@@ -52,19 +53,6 @@ namespace TestSystem.Web
                     policy.RequireRole(UserRoles.User);
                 });
             });
-
-            var adminEmail = "adminIsCoolDude123@gmail.com";
-            var adminPassword = "adminIsCoolDude123!!!";
-            var adminRole = UserRoles.Admin;
-            var domainUser = Helper.CreateDomainUser(adminEmail, adminPassword, adminRole);
-
-            var serviceProvider = services.BuildServiceProvider();
-            var userManager = serviceProvider.GetRequiredService<IUserManager>();
-
-            if (!userManager.IsUserExists(adminEmail))
-            {
-                userManager.CreateUser(adminEmail, adminPassword, adminRole);
-            }
 
             return services;
         }

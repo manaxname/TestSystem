@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TestSystem.Common;
+using TestSystem.Common.CustomExceptions;
 using TestSystem.Domain.Logic.Interfaces;
 using TestSystem.Web.Models;
 using DomainUser = TestSystem.Domain.Models.User;
@@ -41,11 +42,17 @@ namespace TestSystem.Web.Controllers
             { 
                 if (ModelState.IsValid)
                 {
-                    if (!_userManager.IsUserExists(model.Email))
+                    try
                     {
-                        _userManager.CreateUser(model.Email, model.Password, UserRoles.User);
+                        await _userManager.CreateUserAsync(model.Email, model.Password, UserRoles.User);
 
                         return RedirectToAction("Login", "Account");
+                    }
+                    catch(UserAlreadyExistsException)
+                    {
+                        ModelState.AddModelError("", "User with this email already exists");
+
+                        return View(model);
                     }
                 }
 
@@ -76,9 +83,9 @@ namespace TestSystem.Web.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    if (_userManager.IsUserExists(model.Email))
+                    try
                     {
-                        var domainUser = _userManager.GetUserByEmail(model.Email);
+                        var domainUser = await _userManager.GetUserByEmailAsync(model.Email);
 
                         bool isUserValid = _userManager.ValidateUserPassword(domainUser, model.Password);
 
@@ -88,6 +95,12 @@ namespace TestSystem.Web.Controllers
 
                             return RedirectToAction("Index", "Home");
                         }
+                    }
+                    catch(UserNotFoundException)
+                    {
+                        ModelState.AddModelError("", "Invalid Login or(and) Password, try again");
+
+                        return View(model);
                     }
                 }
 
@@ -101,9 +114,9 @@ namespace TestSystem.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult LogOff()
+        public async Task<ActionResult> LogOff()
         {
-            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             return RedirectToAction("Index", "Home");
         }

@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using TestSystem.Common;
+using TestSystem.Common.CustomExceptions;
 using TestSystem.Data;
 using TestSystem.Data.Models;
 using TestSystem.Domain.Logic.Interfaces;
@@ -16,147 +19,95 @@ namespace TestSystem.Domain.Logic.Managers
 {
     public class QuestionManager : IQuestionManager
     {
-        private readonly ITestSystemContext _tpContext;
+        private readonly ITestSystemContext _dbContext;
 
         private readonly ITestManager _testManager;
 
+        private readonly IUserManager _userManager;
+
         private IMapper _mapper;
 
-        public QuestionManager(ITestSystemContext tpContext, ITestManager testManager, IMapper mapper)
+        public QuestionManager(ITestSystemContext dbContext, ITestManager testManager, IUserManager userManager, IMapper mapper)
         {
-            _tpContext = tpContext ?? throw new ArgumentNullException(nameof(tpContext));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _testManager = testManager ?? throw new ArgumentNullException(nameof(testManager));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public int CreateQuestion(DomainQuestion question)
+        public async Task<int> CreateQuestionAsync(DomainQuestion question)
         {
-            if (IsQuestionExists(question.Id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Question already exists.");
-            }
-
-            if (!_testManager.IsTestExists(question.TestId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test doesn't exist.");
-            }
+            await ThrowIfQuestionAlreadyExistsAsync(question.Id);
 
             var dataQuestion = _mapper.Map<DataQuestion>(question);
 
-            _tpContext.Questions.Add(dataQuestion);
+            _dbContext.Questions.Add(dataQuestion);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int CreateQuestion(int testId, string text, int stage, int points, string questionType)
+        public async Task<int> CreateQuestionAsync(int testId, string text, int stage, int points, string questionType)
         {
             var domainQuestion = Helper.CreateDomainQuestion(text, stage, points, questionType, testId);
 
-            return this.CreateQuestion(domainQuestion);
+            return await CreateQuestionAsync(domainQuestion);
         }
 
-        public void DeleteQuestion(int id)
+        public async Task DeleteQuestionAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public DomainQuestion GetFirstQuestionByTestId(int testId)
+        public async Task<DomainQuestion> GetQuestionByIdAsync(int id)
         {
-            if (!_testManager.IsTestExists(testId))
+            var dataQuestion = await _dbContext.Questions.FirstOrDefaultAsync(question => question.Id == id);
+
+            if (dataQuestion == null)
             {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
+                throw new QuestionNotFoundException(id.ToString());
             }
-
-            if (!_tpContext.Questions.Any())
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: $"Test does't contain any questions. Test: {testId}");
-            }
-
-            var dataQuestion = _tpContext.Questions.First(question => question.TestId == testId);
-
-            var domainQuestion = _mapper.Map<DomainQuestion>(dataQuestion);
-
-            return domainQuestion;
-        }
-        
-        public DomainQuestion GetQuestionById(int id)
-        {
-            if (!IsQuestionExists(id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Question does't exist.");
-            }
-
-            var dataQuestion = _tpContext.Questions.First(question => question.Id == id);
 
             var domainQuestion = _mapper.Map<DomainQuestion>(dataQuestion);
 
             return domainQuestion;
         }
 
-        public int GetQuestionCountByTestId(int testId)
+        public async Task<int> GetQuestionCountByTestIdAsync(int testId)
         {
-            if (!_testManager.IsTestExists(testId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
+            await _testManager.ThrowIfTestNotExistsAsync(testId);
 
-            return _tpContext.Questions.Count(q => q.TestId == testId);
+            return await _dbContext.Questions.CountAsync(q => q.TestId == testId);
         }
 
-        public IEnumerable<DomainQuestion> GetQuestionsByTestId(int testId)
+        public async Task<IReadOnlyCollection<DomainQuestion>> GetQuestionsByTestIdAsync(int testId)
         {
-            if (!_testManager.IsTestExists(testId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
+            await _testManager.ThrowIfTestNotExistsAsync(testId);
 
-            var domainQuestions = _tpContext.Questions
+            var domainQuestions = await _dbContext.Questions
                 .Where(question => question.TestId == testId)
-                .Select(question => _mapper.Map<DomainQuestion>(question));
-
-
-            if (domainQuestions == null)
-            {
-                return Enumerable.Empty<DomainQuestion>();
-            }
+                .ProjectTo<DomainQuestion>(_mapper.ConfigurationProvider)
+                .ToListAsync();
 
             return domainQuestions;
         }
 
-        public string GetQuestionTextById(int id)
+        public async Task<string> GetQuestionTextByIdAsync(int id)
         {
-            if (!IsQuestionExists(id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Question does't exist.");
-            }
-
-            return GetQuestionById(id).Text;
+            return (await GetQuestionByIdAsync(id)).Text;
         }
 
-        public string GetQuestionTypeById(int id)
+        public async Task<string> GetQuestionTypeByIdAsync(int id)
         {
-            return GetQuestionById(id).QuestionType;
+            return (await GetQuestionByIdAsync(id)).QuestionType;
         }
 
-        public DomainQuestion GetRandomQuestionInTestByStage(int testId, int stage)
+        public async Task<DomainQuestion> GetRandomQuestionInTestByStageAsync(int testId, int stage)
         {
-            if (!_testManager.IsTestExists(testId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
+            await _testManager.ThrowIfTestNotExistsAsync(testId);
 
-            var dataQuestions = _tpContext.Questions
+            var dataQuestions = await _dbContext.Questions
                 .Where(question => question.TestId == testId && question.Stage == stage)
-                .ToList();
+                .ToListAsync();
 
             var rnd = new Random();
             var randomIndex = rnd.Next(dataQuestions.Count);
@@ -168,32 +119,34 @@ namespace TestSystem.Domain.Logic.Managers
             return domainQuestion;
         }
 
-        public IEnumerable<int> GetTestStagesByTestId(int testId)
+        public async Task<IReadOnlyCollection<int>> GetTestStagesByTestIdAsync(int testId)
         {
-            if (!_testManager.IsTestExists(testId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Test does't exist.");
-            }
+            await _testManager.ThrowIfTestNotExistsAsync(testId);
 
-            var questions = GetQuestionsByTestId(testId)
+            var stages = await _dbContext.Questions
+                .Where(question => question.TestId == testId)
                 .GroupBy(x => x.Stage)
-                .Select(x => x.Key);
+                .Select(x => x.Key)
+                .ToListAsync();
 
-            return questions;
+            return stages;
         }
 
-        public bool IsQuestionExists(int id)
+        public async Task<bool> IsQuestionExistsAsync(int id)
         {
-            return _tpContext.Questions.Any(question => question.Id == id);
+            return await _dbContext.Questions.AnyAsync(question => question.Id == id);
         }
 
-        public IEnumerable<DomainQuestion> GetUserQuestionsByTestId(int userId, int testId)
+        public async Task<IReadOnlyCollection<DomainQuestion>> GetUserQuestionsByTestIdAsync(int userId, int testId)
         {
-            var dataQuestions = _tpContext.Questions
+            await _userManager.ThrowIfUserNotExistsAsync(userId);
+            await _testManager.ThrowIfTestNotExistsAsync(testId);
+
+            var dataQuestions = await _dbContext.Questions
                 .Where(x => x.TestId == testId)
                 .Include(x => x.Answers)
-                    .ThenInclude(x => x.UserAnswers);
+                    .ThenInclude(x => x.UserAnswers)
+                .ToListAsync();
 
             var questions = new Dictionary<int, DomainQuestion>();
 
@@ -212,6 +165,22 @@ namespace TestSystem.Domain.Logic.Managers
             }
 
             return questions.Values;
+        }
+
+        public async Task ThrowIfQuestionNotExistsAsync(int questionId)
+        {
+            if (! await IsQuestionExistsAsync(questionId))
+            {
+                throw new QuestionNotFoundException(questionId.ToString());
+            }
+        }
+
+        public async Task ThrowIfQuestionAlreadyExistsAsync(int questionId)
+        {
+            if (await IsQuestionExistsAsync(questionId))
+            {
+                throw new QuestionAlreadyExistsException(questionId.ToString());
+            }
         }
     }
 }

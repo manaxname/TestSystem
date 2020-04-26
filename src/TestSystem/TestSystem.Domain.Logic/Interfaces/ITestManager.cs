@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TestSystem.Domain.Models;
 
 namespace TestSystem.Domain.Logic.Interfaces
 {
     public interface ITestManager
     {
-        int CreateTest(string name, int time);
-        Test GetTestById(int id);
-        void DeleteTest(int id);
-        IEnumerable<Test> GetTests();
-        int CreateUserTest(UserTest userTest);
-        IEnumerable<UserTest> GetUserTests(int userId);
-        UserTest GetUserTest(int userId, int testId);
-        int UpdateUserTestStatus(int userId, int testId, string status);
-        int UpdateUserTestPoints(int userId, int testId, int points);
-        int UpdateUserTestStartTime(int userId, int testId, DateTime time);
-        bool IsTestExists(int id);
-        bool IsUserTestExists(int usetId, int testId);
+        Task<int> CreateTestAsync(string name, int time);
+        Task<int> CreateUserTestAsync(UserTest userTest);
+        Task<Test> GetTestByIdAsync(int id);
+        Task DeleteTestAsync(int id);
+        Task<IReadOnlyCollection<Test>> GetTestsAsync();
+        Task<IReadOnlyCollection<UserTest>> GetUserTestsAsync(int userId);
+        Task<UserTest> GetUserTestAsync(int userId, int testId);
+        Task<int> UpdateUserTestStatusAsync(int userId, int testId, string status);
+        Task<int> UpdateUserTestPointsAsync(int userId, int testId, int points);
+        Task<int> UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time);
+        Task<bool> IsTestExistsAsync(int id);
+        Task<bool> IsUserTestExistsAsync(int usetId, int testId);
+        Task ThrowIfTestNotExistsAsync(int testId);
+        Task ThrowIfTestAlreadyExistsAsync(int testId);
     }
 }

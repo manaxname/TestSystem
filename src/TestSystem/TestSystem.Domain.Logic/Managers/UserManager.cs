@@ -7,102 +7,126 @@ using DataUser = TestSystem.Data.Models.User;
 using DomainUser = TestSystem.Domain.Models.User;
 using TestSystem.Domain.Models;
 using TestSystem.Common;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using TestSystem.Common.CustomExceptions;
 
 namespace TestSystem.Domain.Logic.Managers
 {
     public class UserManager : IUserManager
     {
-        private readonly ITestSystemContext _tpContext;
+        private readonly ITestSystemContext _dbContext;
 
         private IMapper _mapper;
 
-        public UserManager(ITestSystemContext tpContext, IMapper mapper)
+        public UserManager(ITestSystemContext dbContext, IMapper mapper)
         {
-            _tpContext = tpContext ?? throw new ArgumentNullException(nameof(tpContext));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public int CreateUser(string email, string password, string role)
+        public async Task<int> CreateUserAsync(string email, string password, string role)
         {
-            if (this.IsUserExists(email))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "User already exists.");
-            }
+            await ThrowIfUserAlreadyExistsAsync(email);
 
             var passwordHash = CryptographyHelper.GetSha256Hash(password);
             var newDomainUser = Helper.CreateDomainUser(email, passwordHash, role);
-            
             var newDataUser = _mapper.Map<DataUser>(newDomainUser);
 
-            _tpContext.Users.Add(newDataUser);
+            _dbContext.Users.Add(newDataUser);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int CreateUser(DomainUser user)
+        public async Task<int> CreateUserAsync(DomainUser user)
         {
-            if (this.IsUserExists(user.Id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "User already exists.");
-            }
+            await ThrowIfUserAlreadyExistsAsync(user.Email);
 
             var dataUser = _mapper.Map<DataUser>(user);
 
-            _tpContext.Users.Add(dataUser);
+            _dbContext.Users.Add(dataUser);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public void DeleteUser(string email)
+        public async Task DeleteUserAsync(string email)
         {
             throw new NotImplementedException();
         }
 
-        public DomainUser GetUserByEmail(string email)
+        public async Task<DomainUser> GetUserByEmailAsync(string email)
         {
-            if (!this.IsUserExists(email))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "User does't exist.");
-            }
+            var dataUser = await _dbContext.Users.FirstOrDefaultAsync(user => user.Email == email);
 
-            var dataUser = _tpContext.Users.First(user => user.Email == email);
+            if (dataUser == null)
+            {
+                throw new UserNotFoundException(email);
+            }
 
             var domainUser = _mapper.Map<DomainUser>(dataUser);
 
             return domainUser;
         }
 
-        public DomainUser GetUserById(int id)
+        public async Task<DomainUser> GetUserByIdAsync(int id)
         {
-            if(!this.IsUserExists(id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "User does't exist.");
-            }
+            var dataUser = await _dbContext.Users.FirstOrDefaultAsync(user => user.Id == id);
 
-            var dataUser = _tpContext.Users.First(user => user.Id == id);
+            if (dataUser == null)
+            {
+                throw new UserNotFoundException(id.ToString());
+            }
 
             var domainUser = _mapper.Map<DomainUser>(dataUser);
 
             return domainUser;
         }
 
-        public int GetUserId(string email)
+        public async Task<int> GetUserIdAsync(string email)
         {
-            return GetUserByEmail(email).Id;
+            return (await GetUserByEmailAsync(email)).Id;
         }
 
-        public bool IsUserExists(int id)
+        public async Task<bool> IsUserExistsAsync(int id)
         {
-            return _tpContext.Users.Any(user => user.Id == id);
+            return await _dbContext.Users.AnyAsync(user => user.Id == id);
         }
 
-        public bool IsUserExists(string email)
+        public async Task<bool> IsUserExistsAsync(string email)
         {
-            return _tpContext.Users.Any(user => user.Email == email);
+            return await _dbContext.Users.AnyAsync(user => user.Email == email);
+        }
+
+        public async Task ThrowIfUserAlreadyExistsAsync(string email)
+        {
+            if (await IsUserExistsAsync(email))
+            {
+                throw new UserAlreadyExistsException(email);
+            }
+        }
+
+        public async Task ThrowIfUserAlreadyExistsAsync(int id)
+        {
+            if (await IsUserExistsAsync(id))
+            {
+                throw new UserAlreadyExistsException(id.ToString());
+            }
+        }
+
+        public async Task ThrowIfUserNotExistsAsync(string email)
+        {
+            if (! await IsUserExistsAsync(email))
+            {
+                throw new UserNotFoundException(email);
+            }
+        }
+
+        public async Task ThrowIfUserNotExistsAsync(int id)
+        {
+            if (!await IsUserExistsAsync(id))
+            {
+                throw new UserNotFoundException(id.ToString());
+            }
         }
 
         public bool ValidateUserPassword(DomainUser user, string userPassword)

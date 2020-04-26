@@ -15,183 +15,201 @@ using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DataQuestion = TestSystem.Data.Models.Question;
 using DomainQuestion = TestSystem.Domain.Models.Question;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using TestSystem.Common.CustomExceptions;
+using AutoMapper.QueryableExtensions;
 
 namespace TestSystem.Domain.Logic.Managers
 {
     public class AnswersManager : IAnswersManager
     {
-        private readonly ITestSystemContext _tpContext;
+        private readonly ITestSystemContext _dbContext;
 
         private readonly IQuestionManager _qusetionManager;
 
+        private readonly IUserManager _userManager;
+
         private IMapper _mapper;
 
-        public AnswersManager(ITestSystemContext tpContext, IQuestionManager questionManager, IMapper mapper)
+        public AnswersManager(ITestSystemContext dbContext, IQuestionManager questionManager, IUserManager userManager, IMapper mapper)
         {
-            _tpContext = tpContext ?? throw new ArgumentNullException(nameof(tpContext));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _qusetionManager = questionManager ?? throw new ArgumentNullException(nameof(questionManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public int CreateAnswer(DomainAnswer answer)
+        public async Task<int> CreateAnswerAsync(DomainAnswer answer)
         {
-            if (!_qusetionManager.IsQuestionExists(answer.QuestionId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Question doesn't exist.");
-            }
-
-            if (this.IsAnswerExists(answer.Id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Answer doesn't exist.");
-            }
+            await ThrowIfAnswerAlreadyExistsAsync(answer.Id);
 
             var dataAnswer = _mapper.Map<DataAnswer>(answer);
 
-            _tpContext.Answers.Add(dataAnswer);
+            _dbContext.Answers.Add(dataAnswer);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int CreateUserAnswer(DomainUserAnswer userAnswer)
+        public async Task<int> CreateUserAnswerAsync(DomainUserAnswer userAnswer)
         {
-            if (!this.IsAnswerExists(userAnswer.AnswerId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Answer doesn't exist.");
-            }
-
-            if (this.IsUserAnswerExists(userAnswer.UserId, userAnswer.AnswerId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "UserAnswer already exists.");
-            }
+            await ThrowIfUserAnswerAlreadyExistsAsync(userAnswer.UserId, userAnswer.AnswerId);
 
             var dataUserAnswer = _mapper.Map<DataUserAnswer>(userAnswer);
 
-            _tpContext.UserAnswers.Add(dataUserAnswer);
+            _dbContext.UserAnswers.Add(dataUserAnswer);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int CreateUserAnswers(IEnumerable<DomainUserAnswer> userAnswers)
+        public async Task<int> CreateUserAnswersAsync(IReadOnlyCollection<DomainUserAnswer> userAnswers)
         {
-            _tpContext.UserAnswers.AddRange(
+            // TODO: CHECK HERE
+
+            _dbContext.UserAnswers.AddRange(
                 userAnswers.Select(x => _mapper.Map<DataUserAnswer>(x)));
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public void DeleteAnswer(int id)
+        public Task DeleteAnswerAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public DomainAnswer GetAnswerById(int id)
+        public async Task<DomainAnswer> GetAnswerByIdAsync(int id)
         {
-            if (!this.IsAnswerExists(id))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Answer does't exist.");
-            }
+            var dataAnswer = await _dbContext.Answers.FirstOrDefaultAsync(answer => answer.Id == id);
 
-            var dataAnswer = _tpContext.Answers.First(answer => answer.Id == id);
+            if (dataAnswer == null)
+            {
+                throw new AnswerNotFoundException(id.ToString());
+            }
 
             var domainAnswer = _mapper.Map<DomainAnswer>(dataAnswer);
 
             return domainAnswer;
         }
 
-        public int GetAnswerCountByQuestionId(int questionId)
+        public async Task<int> GetAnswerCountByQuestionIdAsync(int questionId)
         {
-            if (!_qusetionManager.IsQuestionExists(questionId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Question doesn't exist.");
-            }
+            await _qusetionManager.ThrowIfQuestionNotExistsAsync(questionId);
 
-            return _tpContext.Answers.Count(answer => answer.QuestionId == questionId);
+            return await _dbContext.Answers.CountAsync(answer => answer.QuestionId == questionId);
         }
 
-        public IEnumerable<DomainAnswer> GetAnswersByQuestionId(int questionId)
+        public async Task<IReadOnlyCollection<DomainAnswer>> GetAnswersByQuestionIdAsync(int questionId)
         {
-            if (!_qusetionManager.IsQuestionExists(questionId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "Question doesn't exist.");
-            }
+            await _qusetionManager.ThrowIfQuestionNotExistsAsync(questionId);
 
-            var domainAnswers = _tpContext.Answers
+            var domainAnswers = await _dbContext.Answers
                 .Where(answer => answer.QuestionId == questionId)
-                .Select(answer => _mapper.Map<DomainAnswer>(answer));
-
-            if (domainAnswers == null)
-            {
-               return Enumerable.Empty<DomainAnswer>();
-            }
+                .ProjectTo<DomainAnswer>(_mapper.ConfigurationProvider)
+                .ToListAsync();
 
             return domainAnswers;
         }
 
-        public DomainUserAnswer GetUserAnswerByIds(int userId, int answerId)
+        public async Task<DomainUserAnswer> GetUserAnswerByIdsAsync(int userId, int answerId)
         {
-            if (!this.IsUserAnswerExists(userId, answerId))
-            {
-                // TODO: Custom Exception here.
-                throw new Exception(message: "UserAnswer does't exist.");
-            }
-
-            var dataUserAnswer = _tpContext.UserAnswers
-                .First(userAnswer => userAnswer.UserId == userId && 
+            var dataUserAnswer = await _dbContext.UserAnswers
+                .FirstOrDefaultAsync(userAnswer => userAnswer.UserId == userId && 
                     userAnswer.AnswerId == answerId);
+
+            if (dataUserAnswer == null)
+            {
+                throw new UserAnswerNotFoundException($"userId: {userId}, answerId: {answerId}");
+            }
 
             var domainUserAnswer = _mapper.Map<DomainUserAnswer>(dataUserAnswer);
 
             return domainUserAnswer;
         }
 
-        public IEnumerable<DomainUserAnswer> GetUserAnswersByQuestionId(int userId, int questionId)
+        public async Task<IReadOnlyCollection<DomainUserAnswer>> GetUserAnswersByQuestionIdAsync(int userId, int questionId)
         {
-            IEnumerable<DomainUserAnswer> domainUserAnswers;
+            await _qusetionManager.ThrowIfQuestionNotExistsAsync(questionId);
+            await _userManager.ThrowIfUserNotExistsAsync(userId);
 
-            domainUserAnswers = _tpContext.UserAnswers.Include(x => x.Answer)
+            var domainUserAnswers = await _dbContext.UserAnswers.Include(x => x.Answer)
                 .Where(x => x.UserId == userId && x.Answer.QuestionId == questionId)
-                .Select(x => _mapper.Map<DomainUserAnswer>(x));
+                .Select(x => _mapper.Map<DomainUserAnswer>(x))
+                .ToListAsync();
 
             return domainUserAnswers;
         }
 
-        public bool IsAnswerExists(int id)
+        public async Task<bool> IsAnswerExistsAsync(int id)
         {
-            return _tpContext.Answers.Any(answers => answers.Id == id);
+            return await _dbContext.Answers.AnyAsync(answers => answers.Id == id);
         }
 
-        public bool IsUserAnswerExists(int userId, int answerId)
+        public async Task<bool> IsUserAnswerExistsAsync(int userId, int answerId)
         {
-            return _tpContext.UserAnswers.Any(x => x.UserId == userId && x.AnswerId == answerId);
+            return await _dbContext.UserAnswers.AnyAsync(x => x.UserId == userId && x.AnswerId == answerId);
         }
 
-        public int UpdateUserAnswerValid(int userId, int answerId, bool isValid)
+        public async Task<int> UpdateUserAnswerValidAsync(int userId, int answerId, bool isValid)
         {
-            var dataUserAnswer = _tpContext.UserAnswers.FirstOrDefault(x => x.UserId == userId && x.AnswerId == answerId);
+            var dataUserAnswer = await _dbContext.UserAnswers.FirstOrDefaultAsync(x => x.UserId == userId && x.AnswerId == answerId);
+
+            if (dataUserAnswer == null)
+            {
+                throw new UserAnswerNotFoundException($"userId: {userId}, answerId: {answerId}");
+            }
 
             dataUserAnswer.isValid = isValid;
 
-            _tpContext.UserAnswers.Update(dataUserAnswer);
+            _dbContext.UserAnswers.Update(dataUserAnswer);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
         }
 
-        public int UpdateUserAnswerText(int userId, int answerId, string text)
+        public async Task<int> UpdateUserAnswerTextAsync(int userId, int answerId, string text)
         {
-            var dataUserAnswer = _tpContext.UserAnswers.FirstOrDefault(x => x.UserId == userId && x.AnswerId == answerId);
+            var dataUserAnswer = await _dbContext.UserAnswers.FirstOrDefaultAsync(x => x.UserId == userId && x.AnswerId == answerId);
+
+            if (dataUserAnswer == null)
+            {
+                throw new UserAnswerNotFoundException($"userId: {userId}, answerId: {answerId}");
+            }
 
             dataUserAnswer.Text = text;
 
-            _tpContext.UserAnswers.Update(dataUserAnswer);
+            _dbContext.UserAnswers.Update(dataUserAnswer);
 
-            return _tpContext.SaveChangesAsync(default).Result;
+            return await _dbContext.SaveChangesAsync(default);
+        }
+
+        public async Task ThrowIfAnswerNotExistsAsync(int answerId)
+        {
+            if (!await IsAnswerExistsAsync(answerId))
+            {
+                throw new AnswerNotFoundException(answerId.ToString());
+            }
+        }
+
+        public async Task ThrowIfAnswerAlreadyExistsAsync(int answerId)
+        {
+            if (await IsAnswerExistsAsync(answerId))
+            {
+                throw new AnswerAlreadyExistsException(answerId.ToString());
+            }
+        }
+
+        public async Task ThrowIfUserAnswerNotExistsAsync(int userId, int answerId)
+        {
+            if (!await IsUserAnswerExistsAsync(userId, answerId))
+            {
+                throw new UserAnswerNotFoundException(answerId.ToString());
+            }
+        }
+
+        public async Task ThrowIfUserAnswerAlreadyExistsAsync(int userId, int answerId)
+        {
+            if (await IsUserAnswerExistsAsync(userId, answerId))
+            {
+                throw new UserAnswerAlreadyExistsException(answerId.ToString());
+            }
         }
     }
 }
