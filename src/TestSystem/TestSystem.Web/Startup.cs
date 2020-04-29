@@ -36,7 +36,6 @@ namespace TestSystem.Web
             services.AddDomainServices();
             services.AddWebServices(imagesFolderFullName);
 
-
             var adminEmail = "adminIsCoolDude123@gmail.com";
             var adminPassword = "adminIsCoolDude123!!!";
             var adminRole = UserRoles.Admin;
@@ -48,7 +47,6 @@ namespace TestSystem.Web
             {
                 userManager.CreateUserAsync(adminEmail, adminPassword, adminRole).GetAwaiter().GetResult();
             }
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,6 +56,10 @@ namespace TestSystem.Web
             {
                 app.UseDeveloperExceptionPage();
                 app.UseOpenApi().UseSwaggerUi3();
+            } 
+            else
+            {
+                app.UseStatusCodePagesWithReExecute("/Error/{0}");
             }
 
             app.UseHttpsRedirection();
@@ -73,7 +75,7 @@ namespace TestSystem.Web
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

@@ -183,5 +183,18 @@ namespace TestSystem.Domain.Logic.Managers
                 throw new TestAlreadyExsitsException(testId.ToString());
             }
         }
+
+        public async Task<IReadOnlyCollection<DomainUserTest>> GetUserTestsAsync(int userId, params int[] testIds)
+        {
+            if (testIds == null)
+            {
+                throw new ArgumentNullException(nameof(testIds));
+            }
+
+            return await _dbContext.UserTests
+                .Where(x => x.UserId == userId && testIds.Contains(x.TestId))
+                .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
     }
 }

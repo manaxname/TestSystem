@@ -16,6 +16,7 @@ namespace TestSystem.Domain.Logic
             services.AddTransient<ITestManager, TestManager>();
             services.AddTransient<IQuestionManager, QuestionManager>();
             services.AddTransient<IAnswersManager, AnswersManager>();
+            services.AddTransient<IEmailService, EmailService>();
 
             return services;
         }

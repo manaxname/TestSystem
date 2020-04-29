@@ -1,23 +1,23 @@
 ﻿@if ((await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded ||
 (await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded)
 {
-    @User.Identity.Name 
     <ul class="navbar-nav">
         <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-controller="Account" asp-action="LogOff">
-                <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                <button type="submit" class="nav-link btn btn-link text-light">Logout</button>
             </form>
         </li>
     </ul>
+    <span class="text-light"> @User.Identity.Name </span>
 }
 else
 {
     <ul class="navbar-nav">
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
+            <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+            <a class="nav-link text-light" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
         </li>
     </ul>
 }

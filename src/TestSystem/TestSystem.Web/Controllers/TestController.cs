@@ -15,6 +15,7 @@ using DomainTest = TestSystem.Domain.Models.Test;
 using TestSystem.Common;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace TestSystem.Web.Controllers
 {
@@ -30,16 +31,19 @@ namespace TestSystem.Web.Controllers
 
         private readonly IMapper _mapper;
 
+        private readonly IEmailService _emailService;
+
         private readonly int _toSecondsConstant = 60;
 
         public TestController(ITestManager testManager, IMapper mapper, IQuestionManager questionManager,
-            IUserManager userManager, IAnswersManager answersManager)
+            IUserManager userManager, IAnswersManager answersManager, IEmailService emailService)
         {
             _testManager = testManager ?? throw new ArgumentNullException(nameof(testManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _questionManager = questionManager ?? throw new ArgumentNullException(nameof(questionManager));
             _answersManager = answersManager ?? throw new ArgumentNullException(nameof(answersManager));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         [HttpGet]
@@ -278,7 +282,9 @@ namespace TestSystem.Web.Controllers
 
             if (userTest.Status == TestStatus.Finished)
             {
-                return RedirectToAction("EndTest");
+                await FinishTestAsync(userId, testId);
+
+                return PartialView("_EndTest");
             }
             else if (userTest.Status == TestStatus.NotStarted)
             {
@@ -436,15 +442,6 @@ namespace TestSystem.Web.Controllers
             return PartialView("_StartTest", startTest);
         }
 
-        [HttpGet]
-        [Authorize(Policy = "OnlyForUsers")]
-        public async Task<IActionResult> EndTest(int userId , int testId)
-        {
-            await FinishTestAsync(userId, testId);
-
-            return Ok();
-        }
-
         private async Task<List<int>> CreateUserAnswersAndGetQuestionIdsAsync(int testId, int userId)
         {
             var questionIds = new List<int>();
@@ -555,6 +552,29 @@ namespace TestSystem.Web.Controllers
             }
 
             await _testManager.UpdateUserTestPointsAsync(userId, testId, points);
+
+            //await SendEmailIfUserReceivedRequiredPointsInTests(userId, User.Identity.Name, 1, 2);
         }
+
+        //private async Task SendEmailIfUserReceivedRequiredPointsInTests(int userId, string userEmail, int requereidPoints, int testGroupId)
+        //{
+        //    var userTests = await _testManager.GetUserTestsAsync(userId, testIds);
+        //    int userPoints = userTests.Sum(x => x.Points);
+
+        //    if (userPoints >= requereidPoints)
+        //    {
+        //        string subject = "testMessage";
+        //        string messgae = "You succesfully passed all tests!";
+
+        //        await _emailService.SendEmailAsync(userEmail, subject, messgae);
+        //    }
+        //    else
+        //    {
+        //        string subject = "testMessage";
+        //        string messgae = "Sorry!";
+
+        //        await _emailService.SendEmailAsync(userEmail, subject, messgae);
+        //    }
+        //}
     }
 }

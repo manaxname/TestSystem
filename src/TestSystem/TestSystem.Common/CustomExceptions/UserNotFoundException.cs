@@ -4,18 +4,18 @@ using System.Text;
 
 namespace TestSystem.Common.CustomExceptions
 {
-    public class UserTestNotFoundException : Exception
+    public class UserNotFoundException : Exception
     {
-        public UserTestNotFoundException()
+        public UserNotFoundException()
         {
         }
 
-        public UserTestNotFoundException(string message)
+        public UserNotFoundException(string message)
             : base(message)
         {
         }
 
-        public UserTestNotFoundException(string message, Exception inner)
+        public UserNotFoundException(string message, Exception inner)
             : base(message, inner)
         {
         }

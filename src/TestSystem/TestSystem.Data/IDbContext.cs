@@ -16,7 +16,7 @@ namespace TestSystem.Data
         DbSet<Question> Questions { get; set; }
         DbSet<Answer> Answers { get; set; }
         DbSet<UserAnswer> UserAnswers { get; set; }
-        DbSet<UserTest> UserTests { get; set; }
+        DbSet<UserTest> UserTests { get; set; } 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken); 
     }

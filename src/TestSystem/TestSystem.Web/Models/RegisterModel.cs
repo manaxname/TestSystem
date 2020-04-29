@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using TestSystem.Web.CustomValidtationAttributes;
 
 namespace TestSystem.Web.Models
 {
     public class RegisterModel
     {
         [Required]
-        [EmailAddress, MaxLength(500)]
-        [Display(Name = "Email Address")]
+        [CustomEmailAddress]
         public string Email { get; set; }
 
         [Required]
