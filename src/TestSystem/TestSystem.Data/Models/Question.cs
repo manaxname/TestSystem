@@ -13,6 +13,7 @@ namespace TestSystem.Data.Models
         public int Points { get; set; }
         public string QuestionType { get; set; }
         public string ImageFullName { get; set; }
+        public bool IsDeleted { get; set; }
 
         public int TestId { get; set; }
         public ICollection<Answer> Answers { get; set; }

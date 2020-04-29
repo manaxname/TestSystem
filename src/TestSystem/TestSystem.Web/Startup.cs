@@ -26,7 +26,6 @@ namespace TestSystem.Web
         public IConfiguration Configuration { get; }
         public IWebHostEnvironment WebHostEnvironment { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             string connectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -35,21 +34,8 @@ namespace TestSystem.Web
             services.AddDataServices(connectionString);
             services.AddDomainServices();
             services.AddWebServices(imagesFolderFullName);
-
-            var adminEmail = "adminIsCoolDude123@gmail.com";
-            var adminPassword = "adminIsCoolDude123!!!";
-            var adminRole = UserRoles.Admin;
-
-            var serviceProvider = services.BuildServiceProvider();
-            var userManager = serviceProvider.GetRequiredService<IUserManager>();
-
-            if (!userManager.IsUserExistsAsync(adminEmail).GetAwaiter().GetResult())
-            {
-                userManager.CreateUserAsync(adminEmail, adminPassword, adminRole).GetAwaiter().GetResult();
-            }
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

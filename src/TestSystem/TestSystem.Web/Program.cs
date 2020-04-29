@@ -13,6 +13,7 @@ using Serilog.Events;
 using TestSystem.Common;
 using TestSystem.Data;
 using TestSystem.Domain.Logic;
+using TestSystem.Domain.Logic.Interfaces;
 using TestSystem.Domain.Logic.Managers;
 
 namespace TestSystem.Web
@@ -22,28 +23,38 @@ namespace TestSystem.Web
         public static void Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-            //CreateDbIfNotExists(host);
+            CreateDbIfNotExists(host);
             host.Run();
         }
 
-        //private static void CreateDbIfNotExists(IHost host)
-        //{
-        //    using (var scope = host.Services.CreateScope())
-        //    {
-        //        var services = scope.ServiceProvider;
-        //        try
-        //        {
-        //            var context = (TestSystemContext)services.GetRequiredService<ITestSystemContext>();
-        //            context.Database.Migrate();
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            var logger = services.GetRequiredService<ILogger<Program>>();
-        //            logger.LogError(ex, "An error occured creating the DB.");
-        //            throw;
-        //        }
-        //    }
-        //}
+        private static void CreateDbIfNotExists(IHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = (TestSystemContext)services.GetRequiredService<ITestSystemContext>();
+                    context.Database.Migrate();
+
+                    var adminEmail = "adminIsCoolDude123@gmail.com";
+                    var adminPassword = "adminIsCoolDude123!!!";
+                    var adminRole = UserRoles.Admin;
+
+                    var userManager = (UserManager)services.GetRequiredService<IUserManager>();
+                    if (!userManager.IsUserExistsAsync(adminEmail).GetAwaiter().GetResult())
+                    {
+                        userManager.CreateUserAsync(adminEmail, adminPassword, adminRole).GetAwaiter().GetResult();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occured creating the DB.");
+                    throw;
+                }
+            }
+        }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
