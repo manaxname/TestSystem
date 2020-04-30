@@ -12,6 +12,7 @@ using DomainAnswer = TestSystem.Domain.Models.Answer;
 using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
 using DomainTest = TestSystem.Domain.Models.Test;
+using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 using TestSystem.Common;
 using Microsoft.AspNetCore.Http;
 using System.IO;
@@ -48,27 +49,46 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> ShowTestsToAdmin()
+        public async Task<IActionResult> ShowTestsInTopicToAdmin(int topicId)
         {
-            IEnumerable<TestModel> tests = (await _testManager.GetTestsAsync())
+            IEnumerable<TestModel> tests = (await _testManager.GetTestsInTopicAsync(topicId))
                 .Select(test => _mapper.Map<TestModel>(test));
+
+            ViewData["TopicId"] = topicId;
 
             return View(tests);
         }
 
         [HttpGet]
         [Authorize(Policy = "OnlyForUsers")]
-        public async Task<IActionResult> ShowTestsToUser()
+        public async Task<IActionResult> ShowTestsInTopicToUser(int topicId)
         {
             string userEmail = User.Identity.Name;
             int userId = await _userManager.GetUserIdAsync(userEmail);
 
-            List<int> allTestIds = (await _testManager.GetTestsAsync()).Select(x => x.Id).ToList();
-            List<int> userTestIds = (await _testManager.GetUserTestsAsync(userId)).Select(x => x.TestId).ToList();
-
-            foreach (int testId in allTestIds)
+            if (! await _testManager.IsUserTopicExistsAsync(userId, topicId))
             {
-                if (!userTestIds.Contains(testId))
+                var userTopic = new DomainUserTopic
+                {
+                    UserId = userId,
+                    TopicId = topicId,
+                    Status = TopicStatus.NotStarted,
+                    Points = 0
+                };
+
+                await _testManager.CreateUserTopicAsync(userTopic);
+            }
+
+            List<int> topicTestIds = (await _testManager.GetTestsInTopicAsync(topicId))
+                .Select(x => x.Id)
+                .ToList();
+
+            List<int> userTopicTestIds = (await _testManager.GetUserTestsInTopicAsync(topicId, userId))
+                .Select(x => x.TestId).ToList();
+
+            foreach (int testId in topicTestIds)
+            {
+                if (!userTopicTestIds.Contains(testId))
                 {
                     DomainTest test = await _testManager.GetTestByIdAsync(testId);
 
@@ -87,16 +107,46 @@ namespace TestSystem.Web.Controllers
                 }
             }
 
-            IReadOnlyCollection<UserTestModel> userTests = (await _testManager.GetUserTestsAsync(userId))
+            IReadOnlyCollection<UserTestModel> userTopicTests = (await _testManager.GetUserTestsInTopicAsync(topicId, userId))
                 .Select(x => _mapper.Map<UserTestModel>(x)).ToList();
 
-            return View(userTests);
+            ViewData["TopicId"] = topicId;
+
+            return View(userTopicTests);
+        }
+
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public IActionResult CreateTopic()
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public async Task<IActionResult> CreateTopic(TopicModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                int topicId = await _testManager.CreateTopicAsync(model.Name);
+
+                return RedirectToAction("ShowTestsInTopicToAdmin", "Test", new { @TopicId = topicId });
+            }
+
+            ModelState.AddModelError("", "Invalid Test information");
+
+            return View(model);
         }
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public IActionResult CreateTest()
+        public IActionResult CreateTest(int topicId)
         {
+            ViewData["TopicId"] = topicId;
+
             return View();
         }
 
@@ -107,9 +157,9 @@ namespace TestSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _testManager.CreateTestAsync(model.Name, model.Minutes);
+                await _testManager.CreateTestAsync(model.TopicId, model.Name, model.Minutes);
 
-                return RedirectToAction("ShowTestsToAdmin", "Test");
+                return RedirectToAction("ShowTestsInTopicToAdmin", "Test", new { @TopicId = model.TopicId });
             }
 
             ModelState.AddModelError("", "Invalid Test information");
@@ -119,7 +169,7 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> EditTest(int testId)
+        public async Task<IActionResult> EditTest(int topicId, int testId)
         {
             List<QuestionModel> questions = (await _questionManager.GetQuestionsByTestIdAsync(testId))
                 .Select(question => 
@@ -138,6 +188,7 @@ namespace TestSystem.Web.Controllers
 
             DomainTest test = await _testManager.GetTestByIdAsync(testId);
 
+            ViewData["TopicId"] = topicId;
             ViewData["TestName"] = test.Name;
             ViewData["TestId"] = test.Id;
 
@@ -146,8 +197,11 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public IActionResult CreateQuestion(int testId)
+        public IActionResult CreateQuestion(int topicId, int testId)
         {
+            ViewData["TopicId"] = topicId;
+            ViewData["TestId"] = testId;
+
             return View();
         }
 
@@ -171,7 +225,9 @@ namespace TestSystem.Web.Controllers
 
                 await _questionManager.CreateQuestionAsync(domainQuestion);
 
-                return RedirectToAction("EditTest", "Test", new { @TestId = model.TestId });
+                DomainTest test = await _testManager.GetTestByIdAsync(model.TestId);
+
+                return RedirectToAction("EditTest", "Test", new { @TopicId = test.TopicId, @TestId = model.TestId });
             }
 
             ModelState.AddModelError("", "Invalid Question information");
@@ -181,27 +237,14 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> EditQuestion(int testId, int questionId, string questionType)
+        public async Task<IActionResult> EditQuestion(int topicId, int testId, int questionId, string questionType)
         {
-            if (! await _testManager.IsTestExistsAsync(testId))
-            {
-                return BadRequest();
-            }
-
-            if (! await _questionManager.IsQuestionExistsAsync(questionId))
-            {
-                return BadRequest();
-            }
-
-            if (await _questionManager.GetQuestionTypeByIdAsync(questionId) != questionType)
-            {
-                return BadRequest();
-            }
 
             List<AnswerModel> answers = (await _answersManager.GetAnswersByQuestionIdAsync(questionId))
                 .Select(answer => _mapper.Map<AnswerModel>(answer))
                 .ToList();
 
+            ViewData["TopicId"] = topicId;
             ViewData["TestId"] = testId;
             ViewData["QuestionId"] = questionId;
             ViewData["QuestionType"] = questionType;
@@ -213,23 +256,9 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> CreateAnswer(int testId, int questionId, string questionType)
+        public async Task<IActionResult> CreateAnswer(int topicId, int testId, int questionId, string questionType)
         {
-            if (!await _testManager.IsTestExistsAsync(testId))
-            {
-                return BadRequest();
-            }
-
-            if (!await _questionManager.IsQuestionExistsAsync(questionId))
-            {
-                return BadRequest();
-            }
-
-            if (await _questionManager.GetQuestionTypeByIdAsync(questionId) != questionType)
-            {
-                return BadRequest();
-            }
-
+            ViewData["TopicId"] = topicId;
             ViewData["TestId"] = testId;
             ViewData["QuestionId"] = questionId;
             ViewData["QuestionType"] = questionType;
@@ -253,8 +282,10 @@ namespace TestSystem.Web.Controllers
 
                 await _answersManager.CreateAnswerAsync(domainAnswer);
 
+                DomainTest test = await _testManager.GetTestByIdAsync(model.TestId);
+
                 return RedirectToAction("EditQuestion", "Test", 
-                    new { @TestId = model.TestId, @QuestionId = model.QuestionId, @QuestionType = model.QuestionType });
+                    new { @TopicId = test.TopicId, @TestId = model.TestId, @QuestionId = model.QuestionId, @QuestionType = model.QuestionType });
             }
 
             ModelState.AddModelError("", "Invalid Question information");
@@ -264,7 +295,7 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForUsers")]
-        public async Task<IActionResult> StartTest(int testId)
+        public async Task<IActionResult> StartTest(int topicId, int testId)
         {
             string  userEmail = User.Identity.Name;
             int userId = await _userManager.GetUserIdAsync(userEmail);
@@ -279,6 +310,7 @@ namespace TestSystem.Web.Controllers
             int currQuestionStage = 0;
             int secondsLeft = 0;
             DateTime startTime = default;
+            ViewData["TopicId"] = topicId;
 
             if (userTest.Status == TestStatus.Finished)
             {
@@ -327,6 +359,7 @@ namespace TestSystem.Web.Controllers
 
             var startTest = new StartTestModel()
             {
+                TopicId = topicId,
                 UserId = userId,
                 TestId = testId,
                 StagesCount = stagesCount,
@@ -350,7 +383,7 @@ namespace TestSystem.Web.Controllers
             {
                 ViewData["SubmitButton_1"] = "Finish";
             }
-            
+
             return View(startTest);
         }
 
@@ -361,6 +394,7 @@ namespace TestSystem.Web.Controllers
             Dictionary<string, string> dictReq = Request.Form.ToDictionary(x => x.Key, x => x.Value.ToString());
             string submitButtonKey = dictReq.Keys.Single(x => x.Contains("SubmitButton"));
             string submitButtonValue = dictReq[submitButtonKey];
+            int topicId = int.Parse(dictReq["TopicId"]);
             int testId = int.Parse(dictReq["TestId"]);
             int userId = int.Parse(dictReq["UserId"]);
             DomainUserTest userTest = await _testManager.GetUserTestAsync(userId, testId);
@@ -371,6 +405,8 @@ namespace TestSystem.Web.Controllers
             List<int> userQuestionIds = dictReq["UserQuestionIds"].Split(",").Select(x => int.Parse(x)).ToList();
             var answerKeySubStr = "AnswerId";
             var currQuestionImageLocation = string.Empty;
+
+            ViewData["TopicId"] = topicId;
 
             int secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
             if (secondsLeft <= 0)
@@ -424,6 +460,7 @@ namespace TestSystem.Web.Controllers
 
             var startTest = new StartTestModel()
             {
+                TopicId = topicId,
                 TestId = testId,
                 UserId = userId,
                 StagesCount = stagesCount,

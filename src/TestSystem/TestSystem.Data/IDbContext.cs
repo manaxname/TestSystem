@@ -12,11 +12,13 @@ namespace TestSystem.Data
     public interface ITestSystemContext
     {
         DbSet<User> Users { get; set; }
+        DbSet<Topic> Topics { get; set; }
         DbSet<Test> Tests { get; set; }
         DbSet<Question> Questions { get; set; }
         DbSet<Answer> Answers { get; set; }
+        DbSet<UserTopic> UserTopics { get; set; }
+        DbSet<UserTest> UserTests { get; set; }
         DbSet<UserAnswer> UserAnswers { get; set; }
-        DbSet<UserTest> UserTests { get; set; } 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken); 
     }

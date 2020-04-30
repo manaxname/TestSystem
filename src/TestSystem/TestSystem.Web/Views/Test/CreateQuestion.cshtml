@@ -1,5 +1,18 @@
 ﻿@model TestSystem.Web.Models.QuestionModel
 
+@{
+    int? testId = null;
+    if (ViewData.ContainsKey("TestId"))
+    {
+        testId = int.Parse(ViewData["TestId"].ToString());
+    }
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
+}
 
 <h4 class="d-flex justify-content-center">Create Question</h4>
 <hr />
@@ -51,5 +64,5 @@
 </div>
 
 <div>
-    @Html.ActionLink("Back to Tests", "ShowTestsToAdmin", "Test", null, new { @class = "btn btn-secondary" })
+    @Html.ActionLink("Back to questions", "EditTest", "Test", new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-secondary" })
 </div>

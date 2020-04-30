@@ -1,4 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@{
+    int? currentTopicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        currentTopicId = int.Parse(ViewData["TopicId"].ToString());
+    }
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -35,7 +43,14 @@
     <div class="container">
         <main role="main" class="pb-3">
             <div class="row">
-                <div class="col-2">col-4</div>
+                <div class="col-2">
+                    @if (currentTopicId != null)
+                    {
+                        <h4>Topics</h4>
+                    }
+
+                    @await Component.InvokeAsync("Topics", new { @CurrentTopicId = currentTopicId })
+                </div>
                 <div class="col-8">@RenderBody()</div>
             </div>
         </main>

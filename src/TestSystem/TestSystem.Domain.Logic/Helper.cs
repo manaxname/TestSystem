@@ -18,12 +18,21 @@ namespace TestSystem.Domain.Logic
             }; ;
         }
 
-        public static Test CreateDomainTest(string name, int time)
+        public static Test CreateDomainTest(int topicId, string name, int time)
         {
             return new Test
             {
+                TopicId = topicId,
                 Name = name,
                 Minutes = time
+            };
+        }
+
+        public static Topic CreateDomainTopic(string name)
+        {
+            return new Topic
+            {
+                Name = name
             };
         }
 

@@ -10,8 +10,8 @@ using TestSystem.Data;
 namespace TestSystem.Data.Migrations
 {
     [DbContext(typeof(TestSystemContext))]
-    [Migration("20200429203302_Second")]
-    partial class Second
+    [Migration("20200430164952_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -89,9 +89,6 @@ namespace TestSystem.Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("GroupNumber")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -101,9 +98,35 @@ namespace TestSystem.Data.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TopicId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("TopicId");
+
                     b.ToTable("Tests");
+                });
+
+            modelBuilder.Entity("TestSystem.Data.Models.Topic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PassingPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Topics");
                 });
 
             modelBuilder.Entity("TestSystem.Data.Models.User", b =>
@@ -184,6 +207,30 @@ namespace TestSystem.Data.Migrations
                     b.ToTable("UserTests");
                 });
 
+            modelBuilder.Entity("TestSystem.Data.Models.UserTopic", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TopicId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "TopicId");
+
+                    b.HasIndex("TopicId");
+
+                    b.ToTable("UserTopics");
+                });
+
             modelBuilder.Entity("TestSystem.Data.Models.Answer", b =>
                 {
                     b.HasOne("TestSystem.Data.Models.Question", null)
@@ -198,6 +245,15 @@ namespace TestSystem.Data.Migrations
                     b.HasOne("TestSystem.Data.Models.Test", null)
                         .WithMany("Questions")
                         .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TestSystem.Data.Models.Test", b =>
+                {
+                    b.HasOne("TestSystem.Data.Models.Topic", null)
+                        .WithMany("Tests")
+                        .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -227,6 +283,21 @@ namespace TestSystem.Data.Migrations
 
                     b.HasOne("TestSystem.Data.Models.User", "User")
                         .WithMany("UserTests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TestSystem.Data.Models.UserTopic", b =>
+                {
+                    b.HasOne("TestSystem.Data.Models.Topic", "Topic")
+                        .WithMany("UserTopics")
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TestSystem.Data.Models.User", "User")
+                        .WithMany("UserTopics")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

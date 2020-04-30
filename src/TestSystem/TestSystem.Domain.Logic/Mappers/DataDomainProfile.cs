@@ -11,6 +11,10 @@ using DataUserAnswer = TestSystem.Data.Models.UserAnswer;
 using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DataUserTest = TestSystem.Data.Models.UserTest;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
+using DataTopic = TestSystem.Data.Models.Topic;
+using DomainTopic = TestSystem.Domain.Models.Topic;
+using DataUserTopic = TestSystem.Data.Models.UserTopic;
+using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 
 namespace TestSystem.Domain.Logic.Mappers
 {
@@ -24,6 +28,9 @@ namespace TestSystem.Domain.Logic.Mappers
             CreateMap<DataAnswer, DomainAnswer>().ReverseMap();
             CreateMap<DataUserAnswer, DomainUserAnswer>().ReverseMap();
             CreateMap<DataUserTest, DomainUserTest>().ReverseMap();
+            CreateMap<DataUserTest, DomainUserTest>().ReverseMap();
+            CreateMap<DataTopic, DomainTopic>().ReverseMap();
+            CreateMap<DataUserTopic, DomainUserTopic>().ReverseMap();
         }
     }
 }

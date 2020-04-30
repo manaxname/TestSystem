@@ -2,11 +2,13 @@
 
 @{
     ViewData["Title"] = "Tests";
+
+    int topicId = int.Parse(ViewData["TopicId"].ToString());
 }
 
 <h4>Tests</h4>
 <p>
-    @Html.ActionLink("Create new Test", "CreateTest", "Test", null, new { @class = "btn btn-primary" })
+    @Html.ActionLink("Create new Test", "CreateTest", "Test", new { @TopicId = topicId }, new { @class = "btn btn-primary" })
 </p>
 <table class="table">
     <thead>
@@ -36,7 +38,7 @@
                     @Html.DisplayFor(modelItem => item.Minutes)
                 </td>
                 <td>
-                    @Html.ActionLink("Edit", "EditTest", "Test", new { @TestId = item.Id }, new { @class = "btn btn-primary" })
+                    @Html.ActionLink("Edit", "EditTest", "Test", new { @TopicId = topicId, @TestId = item.Id }, new { @class = "btn btn-primary" })
                 </td>
             </tr>
         }

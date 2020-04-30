@@ -14,5 +14,6 @@ namespace TestSystem.Data.Models
 
         public ICollection<UserAnswer> UserAnswers { get; set; }
         public ICollection<UserTest> UserTests { get; set; }
+        public ICollection<UserTopic> UserTopics { get; set; }
     }
 }

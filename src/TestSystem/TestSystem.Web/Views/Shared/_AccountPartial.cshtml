@@ -1,16 +1,13 @@
 ﻿@if ((await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded)
 {
+
     <li class="nav-item">
-        <a class="nav-link  text-light" asp-area="" asp-controller="Test" asp-action="ShowTestsToAdmin">Tests</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-light" asp-area="" asp-controller="Test" asp-action="CreateTest">Create new Test</a>
+        <a class="nav-link text-light" asp-area="" asp-controller="Test" asp-action="CreateTopic">Create new Topic</a>
     </li>
 }
-
-@if ((await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded)
+else if ((await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded)
 {
-    <li class="nav-item">
+    @*<li class="nav-item">
         <a class="nav-link text-light" asp-area="" asp-controller="Test" asp-action="ShowTestsToUser">Tests</a>
-    </li>
+    </li>*@
 }

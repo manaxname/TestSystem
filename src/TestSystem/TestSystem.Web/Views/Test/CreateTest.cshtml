@@ -2,6 +2,18 @@
 
 @{
     ViewData["Title"] = "Create Test";
+
+    int questionId = 0;
+    if (ViewData.ContainsKey("QuestionId"))
+    {
+        int.TryParse(ViewData["QuestionId"].ToString(), out questionId);
+    }
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
 }
 
 <h4 class="d-flex justify-content-center">Create Test</h4>
@@ -20,8 +32,16 @@
                 <input asp-for="Minutes" class="form-control" />
             </div>
             <div class="form-group">
+                <label asp-for="TopicId" class="control-label"></label>
+                <input asp-for="TopicId" class="form-control" />
+            </div>
+            <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
     </div>
+</div>
+
+<div>
+    @Html.ActionLink("Back to Tests", "ShowTestsInTopicToAdmin", "Test", new { @TopicId = topicId }, new { @class = "btn btn-secondary" })
 </div>

@@ -14,14 +14,21 @@ namespace TestSystem.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Topic> Topics { get; set; }
         public DbSet<Test> Tests { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<Answer> Answers { get; set; }
-        public DbSet<UserAnswer> UserAnswers { get; set; }
+        public DbSet<UserTopic> UserTopics { get; set; }
         public DbSet<UserTest> UserTests { get; set; }
+        public DbSet<UserAnswer> UserAnswers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Topic>()
+              .HasMany(x => x.Tests)
+              .WithOne()
+              .HasForeignKey(x => x.TopicId);
+
             modelBuilder.Entity<Test>()
                 .HasMany(x => x.Questions)
                 .WithOne()
@@ -53,6 +60,17 @@ namespace TestSystem.Data
                .HasOne<Test>(x => x.Test)
                .WithMany(x => x.UserTests)
                .HasForeignKey(x => x.TestId);
+
+            modelBuilder.Entity<UserTopic>()
+              .HasKey(x => new { x.UserId, x.TopicId });
+            modelBuilder.Entity<UserTopic>()
+                .HasOne<User>(x => x.User)
+                .WithMany(x => x.UserTopics)
+                .HasForeignKey(x => x.UserId);
+            modelBuilder.Entity<UserTopic>()
+               .HasOne<Topic>(x => x.Topic)
+               .WithMany(x => x.UserTopics)
+               .HasForeignKey(x => x.TopicId);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

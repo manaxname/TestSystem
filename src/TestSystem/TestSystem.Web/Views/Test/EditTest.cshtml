@@ -8,12 +8,18 @@
     {
         int.TryParse(ViewData["TestId"].ToString(), out testId);
     }
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
 }
 
-<h4>@testId. @ViewData["TestName"] </h4>
+<h4>@ViewData["TestName"] </h4>
 <p>
     @Html.ActionLink("Create new Question", "CreateQuestion", "Test",
-        new { @TestId = testId }, new { @class = "btn btn-primary" })
+        new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-primary" })
 </p>
 
 <table class="table">
@@ -70,12 +76,12 @@
                 </td>
                 <td>
                     @Html.ActionLink("Edit", "EditQuestion", "Test",
-                    new { @TestId = item.TestId, @QuestionId = item.Id, @QuestionType = item.QuestionType }, new { @class = "btn btn-primary" })
+                    new { @TopicId = topicId, @TestId = item.TestId, @QuestionId = item.Id, @QuestionType = item.QuestionType }, new { @class = "btn btn-primary" })
                 </td>
             </tr>
         }
     </tbody>
 </table>
 <div>
-    @Html.ActionLink("Back to Tests", "ShowTestsToAdmin", "Test", null, new { @class = "btn btn-secondary" })
+    @Html.ActionLink("Back to Tests", "ShowTestsInTopicToAdmin", "Test", new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-secondary" })
 </div>

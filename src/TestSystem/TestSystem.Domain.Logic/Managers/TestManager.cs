@@ -11,6 +11,10 @@ using DataTest = TestSystem.Data.Models.Test;
 using DomainTest = TestSystem.Domain.Models.Test;
 using DataUserTest = TestSystem.Data.Models.UserTest;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
+using DataTopic = TestSystem.Data.Models.Topic;
+using DomainTopic = TestSystem.Domain.Models.Topic;
+using DataUserTopic = TestSystem.Data.Models.UserTopic;
+using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 using System.Threading.Tasks;
 using TestSystem.Common.CustomExceptions;
 using AutoMapper.QueryableExtensions;
@@ -32,9 +36,9 @@ namespace TestSystem.Domain.Logic.Managers
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public async Task<int> CreateTestAsync(string name, int time)
+        public async Task<int> CreateTestAsync(int topicId, string name, int time)
         {
-            var domainTest = Helper.CreateDomainTest(name, time);
+            var domainTest = Helper.CreateDomainTest(topicId, name, time);
 
             var dataTest = _mapper.Map<DataTest>(domainTest);
 
@@ -120,6 +124,11 @@ namespace TestSystem.Domain.Logic.Managers
             return await _dbContext.UserTests.AnyAsync(x => x.UserId == usetId && x.TestId == testId);
         }
 
+        public async Task<bool> IsUserTopicExistsAsync(int usetId, int topicId)
+        {
+            return await _dbContext.UserTopics.AnyAsync(x => x.UserId == usetId && x.TopicId == topicId);
+        }
+
         public async Task<int> UpdateUserTestPointsAsync(int userId, int testId, int points)
         {
             var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
@@ -195,6 +204,86 @@ namespace TestSystem.Domain.Logic.Managers
                 .Where(x => x.UserId == userId && testIds.Contains(x.TestId))
                 .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
                 .ToListAsync();
+        }
+
+        public async Task<int> CreateTopicAsync(string name)
+        {
+            var domainTopic = Helper.CreateDomainTopic(name);
+
+            var dataTopic = _mapper.Map<DataTopic>(domainTopic);
+
+            _dbContext.Topics.Add(dataTopic);
+
+            await _dbContext.SaveChangesAsync(default);
+
+            return dataTopic.Id;
+        }
+
+        public async Task<int> CreateUserTopicAsync(DomainUserTopic userTopic)
+        {
+            await ThrowIfUserTopicAlreadyExistsAsync(userTopic.UserId, userTopic.TopicId);
+
+            var dataUserTopic = _mapper.Map<DataUserTopic>(userTopic);
+
+            _dbContext.UserTopics.Add(dataUserTopic);
+
+            return await _dbContext.SaveChangesAsync(default);
+        }
+
+        public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync()
+        {
+            var domainTopic = await _dbContext.Topics.ProjectTo<DomainTopic>(_mapper.ConfigurationProvider).ToListAsync();
+
+            return domainTopic;
+        }
+
+        public async Task<IReadOnlyCollection<DomainUserTest>> GetUserTopicsAsync(int userId, int topicId)
+        {
+            await ThrowIfUserTopicNotExistsAsync(userId, topicId);
+
+            var domainUserTests = await _dbContext.UserTopics
+                .Where(x => x.UserId == userId && x.TopicId == topicId)
+                .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return domainUserTests;
+        }
+
+        public async Task ThrowIfUserTopicNotExistsAsync(int userId, int topicId)
+        {
+            if (!await IsUserTopicExistsAsync(userId, topicId))
+            {
+                throw new UserTopicNotFoundException($"userId: {userId}, topicId: {topicId}");
+            }
+        }
+
+        public async Task ThrowIfUserTopicAlreadyExistsAsync(int userId, int topicId)
+        {
+            if (await IsUserTopicExistsAsync(userId, topicId))
+            {
+                throw new UserTopicNotFoundException($"userId: {userId}, topicId: {topicId}");
+            }
+        }
+
+        public async Task<IReadOnlyCollection<DomainTest>> GetTestsInTopicAsync(int topicId)
+        {
+            var domainTests = await _dbContext.Tests
+                .Where(x => x.TopicId == topicId)
+                .ProjectTo<DomainTest>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return domainTests;
+        }
+
+        public async Task<IReadOnlyCollection<DomainUserTest>> GetUserTestsInTopicAsync(int topicId, int userId)
+        {
+            var domainUserTests = await _dbContext.UserTests
+                .Include(x => x.Test)
+                .Where(x => x.UserId == userId && x.Test.TopicId == topicId)
+                .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return domainUserTests;
         }
     }
 }

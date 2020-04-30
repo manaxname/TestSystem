@@ -26,6 +26,12 @@
     {
         int.TryParse(ViewData["AnswersCount"].ToString(), out answersCount);
     }
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
 }
 
 <h5>@questionId. @ViewData["QuestionText"]</h5>
@@ -33,12 +39,12 @@
     @if (questionType == QuestionTypes.Text && answersCount < 1)
     {
         @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
-            new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
+            new { @TopicId = topicId, @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
     }
     else if (questionType == QuestionTypes.Option)
     {
         @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
-              new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
+              new { @TopicId = topicId, @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
     }
 </p>
 
@@ -87,5 +93,5 @@
 </table>
 
 <div>
-    @Html.ActionLink("Back to Questions", "EditTest", "Test", new { @TestId = testId }, new { @class = "btn btn-secondary" })
+    @Html.ActionLink("Back to Questions", "EditTest", "Test", new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-secondary" })
 </div>

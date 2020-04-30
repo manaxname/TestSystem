@@ -15,5 +15,7 @@ namespace TestSystem.Web.Models
 
         [Required]
         public int Minutes { get; set; }
+
+        public int TopicId { get; set; }
     }
 }

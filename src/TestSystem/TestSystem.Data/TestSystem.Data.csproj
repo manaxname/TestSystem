@@ -5,13 +5,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Remove="Migrations\20200429202334_sc.cs" />
-      <Compile Remove="Migrations\20200429202334_sc.Designer.cs" />
-      <Compile Remove="Migrations\20200429203055_Second.cs" />
-      <Compile Remove="Migrations\20200429203055_Second.Designer.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\TestSystem.Common\TestSystem.Common.csproj" />
     </ItemGroup>
 

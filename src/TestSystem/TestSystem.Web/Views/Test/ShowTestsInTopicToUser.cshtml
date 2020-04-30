@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Tests";
+
+    int topicId = int.Parse(ViewData["TopicId"].ToString());
 }
 
 <table class="table">
@@ -28,21 +30,21 @@
                 {
                     <td>
                         <span class="text-primary points-text-style">Not Started</span>
-                        @Html.ActionLink("Start", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                        @Html.ActionLink("Start", "StartTest", "Test", new { @TopicId = topicId, @TestId = item.TestId }, new { @class = "btn btn-primary" })
                     </td>
                 }
                 else if (item.Status == TestStatus.NotFinished)
                 {
                     <td>
                         <span class="text-warning points-text-style">Not Finished</span>
-                        @Html.ActionLink("Continue", "StartTest", "Test", new { @TestId = item.TestId }, new { @class = "btn btn-primary" })
+                        @Html.ActionLink("Continue", "StartTest", "Test", new { @TopicId = topicId, @TestId = item.TestId }, new { @class = "btn btn-primary" })
                     </td>
                 }
                 else if (item.Status == TestStatus.Finished)
                 {
                 <td>
                     <span class="text-success points-text-style">Finished</span>,
-                    Your points: <span class="points-text-style">@item.Points</span>
+                    Your points for test: <span class="points-text-style">@item.Points</span>
                 </td>
                 }
             </tr>

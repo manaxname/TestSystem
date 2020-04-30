@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using DomainTest = TestSystem.Domain.Models.Test;
 using DomainQuestion = TestSystem.Domain.Models.Question;
-using DomainAnswerOption = TestSystem.Domain.Models.Answer;
-using DomainUserAnswerOption = TestSystem.Domain.Models.UserAnswer;
+using DomainAnswer = TestSystem.Domain.Models.Answer;
+using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
+using DomainTopic = TestSystem.Domain.Models.Topic;
+using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 
 using TestSystem.Web.Models;
 
@@ -16,19 +18,21 @@ namespace TestSystem.Domain.Logic.Mappers
     {
         public DomainViewProfile()
         {
+            CreateMap<DomainTopic, TopicModel>().ReverseMap();
+
             CreateMap<DomainTest, TestModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(map => map.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(map => map.Name))
                 .ReverseMap();
 
             CreateMap<DomainQuestion, QuestionModel>().ReverseMap();
-            CreateMap<DomainAnswerOption, AnswerModel>()
+            CreateMap<DomainAnswer, AnswerModel>()
                 .ForMember(dest => dest.Text, opt => opt.MapFrom(map => map.Text))
                 .ForMember(dest => dest.IsValid, opt => opt.MapFrom(map => map.IsValid))
                 .ForMember(dest => dest.QuestionId, opt => opt.MapFrom(map => map.QuestionId))
                 .ReverseMap();
 
-            CreateMap<DomainUserAnswerOption, UserAnswerModel>().ReverseMap();
+            CreateMap<DomainUserAnswer, UserAnswerModel>().ReverseMap();
             CreateMap<DomainUserTest, UserTestModel>()
                 .ForMember(dest => dest.TestName, opt => opt.MapFrom(map => map.Test.Name))
                 .ReverseMap();

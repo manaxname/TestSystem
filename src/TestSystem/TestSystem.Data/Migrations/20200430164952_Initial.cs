@@ -8,17 +8,18 @@ namespace TestSystem.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Tests",
+                name: "Topics",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(nullable: true),
-                    Minutes = table.Column<int>(nullable: false)
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    PassingPoints = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tests", x => x.Id);
+                    table.PrimaryKey("PK_Topics", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -29,11 +30,61 @@ namespace TestSystem.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Email = table.Column<string>(nullable: true),
                     PasswordHash = table.Column<string>(nullable: true),
-                    Role = table.Column<string>(nullable: true)
+                    Role = table.Column<string>(nullable: true),
+                    IsDeleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(nullable: true),
+                    Minutes = table.Column<int>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    TopicId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tests_Topics_TopicId",
+                        column: x => x.TopicId,
+                        principalTable: "Topics",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserTopics",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(nullable: false),
+                    TopicId = table.Column<int>(nullable: false),
+                    Status = table.Column<string>(nullable: true),
+                    Points = table.Column<int>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserTopics", x => new { x.UserId, x.TopicId });
+                    table.ForeignKey(
+                        name: "FK_UserTopics_Topics_TopicId",
+                        column: x => x.TopicId,
+                        principalTable: "Topics",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserTopics_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -47,6 +98,7 @@ namespace TestSystem.Data.Migrations
                     Points = table.Column<int>(nullable: false),
                     QuestionType = table.Column<string>(nullable: true),
                     ImageFullName = table.Column<string>(nullable: true),
+                    IsDeleted = table.Column<bool>(nullable: false),
                     TestId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -69,7 +121,8 @@ namespace TestSystem.Data.Migrations
                     Status = table.Column<string>(nullable: true),
                     Points = table.Column<int>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false),
-                    TestMinutes = table.Column<int>(nullable: false)
+                    TestMinutes = table.Column<int>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -96,6 +149,7 @@ namespace TestSystem.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Text = table.Column<string>(nullable: true),
                     IsValid = table.Column<bool>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false),
                     QuestionId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -116,7 +170,8 @@ namespace TestSystem.Data.Migrations
                     UserId = table.Column<int>(nullable: false),
                     AnswerId = table.Column<int>(nullable: false),
                     isValid = table.Column<bool>(nullable: false),
-                    Text = table.Column<string>(nullable: true)
+                    Text = table.Column<string>(nullable: true),
+                    IsDeleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -146,6 +201,11 @@ namespace TestSystem.Data.Migrations
                 column: "TestId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tests_TopicId",
+                table: "Tests",
+                column: "TopicId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserAnswers_AnswerId",
                 table: "UserAnswers",
                 column: "AnswerId");
@@ -154,6 +214,11 @@ namespace TestSystem.Data.Migrations
                 name: "IX_UserTests_TestId",
                 table: "UserTests",
                 column: "TestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserTopics_TopicId",
+                table: "UserTopics",
+                column: "TopicId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -163,6 +228,9 @@ namespace TestSystem.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserTests");
+
+            migrationBuilder.DropTable(
+                name: "UserTopics");
 
             migrationBuilder.DropTable(
                 name: "Answers");
@@ -175,6 +243,9 @@ namespace TestSystem.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tests");
+
+            migrationBuilder.DropTable(
+                name: "Topics");
         }
     }
 }
