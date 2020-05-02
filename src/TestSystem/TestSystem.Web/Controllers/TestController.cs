@@ -13,6 +13,7 @@ using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
 using DomainTest = TestSystem.Domain.Models.Test;
 using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
+using DomainTopic = TestSystem.Domain.Models.Topic;
 using TestSystem.Common;
 using Microsoft.AspNetCore.Http;
 using System.IO;
@@ -90,14 +91,11 @@ namespace TestSystem.Web.Controllers
             {
                 if (!userTopicTestIds.Contains(testId))
                 {
-                    DomainTest test = await _testManager.GetTestByIdAsync(testId);
-
                     var domainUserTest = new DomainUserTest
                     {
                         Status = TestStatus.NotStarted,
                         TestId = testId,
                         UserId = userId,
-                        TestMinutes = test.Minutes
                     };
 
                     if (! await _testManager.IsUserTestExistsAsync(userId, testId))
@@ -131,7 +129,7 @@ namespace TestSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                int topicId = await _testManager.CreateTopicAsync(model.Name);
+                int topicId = await _testManager.CreateTopicAsync(model.Name, model.PassingPoints);
 
                 return RedirectToAction("ShowTestsInTopicToAdmin", "Test", new { @TopicId = topicId });
             }
@@ -299,6 +297,7 @@ namespace TestSystem.Web.Controllers
         {
             string  userEmail = User.Identity.Name;
             int userId = await _userManager.GetUserIdAsync(userEmail);
+            DomainTest test = await _testManager.GetTestByIdAsync(testId);
             DomainUserTest userTest = await _testManager.GetUserTestAsync(userId, testId);
             List<int> testStages = (await _questionManager.GetTestStagesByTestIdAsync(testId)).ToList();
             int stagesCount = testStages.Count;
@@ -314,7 +313,7 @@ namespace TestSystem.Web.Controllers
 
             if (userTest.Status == TestStatus.Finished)
             {
-                await FinishTestAsync(userId, testId);
+                await FinishTestAsync(userId, topicId, testId);
 
                 return PartialView("_EndTest");
             }
@@ -324,19 +323,19 @@ namespace TestSystem.Web.Controllers
 
                 userQuestionIds = await CreateUserAnswersAndGetQuestionIdsAsync(testId, userId);
                 currQuestion = await _questionManager.GetQuestionByIdAsync(userQuestionIds[0]);
-                secondsLeft = userTest.TestMinutes * _toSecondsConstant;
+                secondsLeft = test.Minutes * _toSecondsConstant;
                 startTime = DateTime.Now;
 
                 await _testManager.UpdateUserTestStartTimeAsync(userId, testId, startTime);
             }
             else if (userTest.Status == TestStatus.NotFinished)
             {
-                secondsLeft = userTest.TestMinutes * _toSecondsConstant - 
+                secondsLeft = test.Minutes * _toSecondsConstant - 
                     Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
 
                 if (secondsLeft <= 0)
                 {
-                    await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.Finished);
+                    await FinishTestAsync(userId, topicId, testId);
 
                     return BadRequest("Time's been expired.");
                 }
@@ -364,7 +363,6 @@ namespace TestSystem.Web.Controllers
                 TestId = testId,
                 StagesCount = stagesCount,
                 StartTime = startTime,
-                TestMinutes = userTest.TestMinutes,
                 SecondsLeft = secondsLeft,
                 UserQuestionIds = string.Join(",", userQuestionIds),
 
@@ -397,6 +395,7 @@ namespace TestSystem.Web.Controllers
             int topicId = int.Parse(dictReq["TopicId"]);
             int testId = int.Parse(dictReq["TestId"]);
             int userId = int.Parse(dictReq["UserId"]);
+            DomainTest test = await _testManager.GetTestByIdAsync(testId);
             DomainUserTest userTest = await _testManager.GetUserTestAsync(userId, testId);
             int stagesCount = int.Parse(dictReq["StagesCount"]);
             int currQuestionId = int.Parse(dictReq["CurrQuestionId"]);
@@ -408,10 +407,10 @@ namespace TestSystem.Web.Controllers
 
             ViewData["TopicId"] = topicId;
 
-            int secondsLeft = userTest.TestMinutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
+            int secondsLeft = test.Minutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
             if (secondsLeft <= 0)
             {
-                await FinishTestAsync(userId, testId);
+                await FinishTestAsync(userId, topicId, testId);
 
                 return PartialView("_EndTest"); // to redirect from ajax post
             }
@@ -443,7 +442,7 @@ namespace TestSystem.Web.Controllers
 
             if (submitButtonValue == "Finish" && currQuestionStage == stagesCount)
             {
-                await FinishTestAsync(userId, testId);
+                await FinishTestAsync(userId, topicId, testId);
 
                 return PartialView("_EndTest");
             }
@@ -464,7 +463,6 @@ namespace TestSystem.Web.Controllers
                 TestId = testId,
                 UserId = userId,
                 StagesCount = stagesCount,
-                TestMinutes = userTest.TestMinutes,
                 SecondsLeft = secondsLeft,
                 UserQuestionIds = dictReq["UserQuestionIds"],
 
@@ -552,7 +550,7 @@ namespace TestSystem.Web.Controllers
             }
         }
 
-        private async Task FinishTestAsync(int userId, int testId)
+        private async Task FinishTestAsync(int userId, int topicId, int testId)
         {
             await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.Finished);
 
@@ -590,28 +588,32 @@ namespace TestSystem.Web.Controllers
 
             await _testManager.UpdateUserTestPointsAsync(userId, testId, points);
 
-            //await SendEmailIfUserReceivedRequiredPointsInTests(userId, User.Identity.Name, 1, 2);
+            List<DomainUserTest> userTestsInTopic = (await _testManager.GetUserTestsInTopicAsync(topicId, userId)).ToList();
+            if (userTestsInTopic.All(x => x.Status == TestStatus.Finished))
+            {
+                int userPoints = userTestsInTopic.Sum(x => x.Points);
+                DomainTopic topic = await _testManager.GetTopicByIdAsync(topicId);
+
+                await SendEmailToUserAboutPassingTheTopic(User.Identity.Name, topic, userPoints);
+            }
         }
 
-        //private async Task SendEmailIfUserReceivedRequiredPointsInTests(int userId, string userEmail, int requereidPoints, int testGroupId)
-        //{
-        //    var userTests = await _testManager.GetUserTestsAsync(userId, testIds);
-        //    int userPoints = userTests.Sum(x => x.Points);
+        private async Task SendEmailToUserAboutPassingTheTopic(string userEmail, DomainTopic topic, int userPoints)
+        {
+            if (userPoints >= topic.PassingPoints)
+            {
+                string subject = "Test System";
+                string messgae = $"You succesfully passed all tests in {topic.Name}! Your points: {userPoints}";
 
-        //    if (userPoints >= requereidPoints)
-        //    {
-        //        string subject = "testMessage";
-        //        string messgae = "You succesfully passed all tests!";
+                await _emailService.SendEmailAsync(userEmail, subject, messgae);
+            }
+            else
+            {
+                string subject = "Test System";
+                string messgae = $"Sorry, you haven't gained enough points in {topic.Name}! Your points: {userPoints}";
 
-        //        await _emailService.SendEmailAsync(userEmail, subject, messgae);
-        //    }
-        //    else
-        //    {
-        //        string subject = "testMessage";
-        //        string messgae = "Sorry!";
-
-        //        await _emailService.SendEmailAsync(userEmail, subject, messgae);
-        //    }
-        //}
+                await _emailService.SendEmailAsync(userEmail, subject, messgae);
+            }
+        }
     }
 }

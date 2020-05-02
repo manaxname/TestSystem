@@ -9,7 +9,6 @@ namespace TestSystem.Domain.Models
         public string Status { get; set; }
         public int Points { get; set; }
         public DateTime StartTime { get; set; }
-        public int TestMinutes { get; set; }
 
         public int UserId { get; set; }
         public User User { get; set; }

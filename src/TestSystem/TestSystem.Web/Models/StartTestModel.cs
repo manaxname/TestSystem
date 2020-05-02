@@ -12,7 +12,6 @@ namespace TestSystem.Web.Models
         public int UserId { get; set; }
         public int StagesCount { get; set; }
         public DateTime StartTime { get; set; }
-        public int TestMinutes { get; set; }
         public int SecondsLeft { get; set; }
         public string UserQuestionIds { get; set; }
 

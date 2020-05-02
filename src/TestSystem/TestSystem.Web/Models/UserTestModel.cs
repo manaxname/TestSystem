@@ -11,7 +11,6 @@ namespace TestSystem.Web.Models
         public string Status { get; set; }
         public int Points { get; set; }
         public DateTime StartTime { get; set; }
-        public int TestMinutes { get; set; }
 
         public int UserId { get; set; }
         public int TestId { get; set; }

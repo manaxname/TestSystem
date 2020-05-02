@@ -195,9 +195,6 @@ namespace TestSystem.Data.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TestMinutes")
-                        .HasColumnType("int");
-
                     b.HasKey("UserId", "TestId");
 
                     b.HasIndex("TestId");

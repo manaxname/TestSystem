@@ -49,17 +49,9 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-2">
-                    <div class="sidebar-item">
-                        <div class="make-me-sticky">
-                            @await Component.InvokeAsync("Topics", new { @CurrentTopicId = currentTopicId })
-                        </div>
-                    </div>
-                </div>
-                <div class="col-10">
-                    <div class="content-section">
-                        @RenderBody()
-                    </div>
+                <div class="container content-section">
+                    @RenderBody()
+                    @await Component.InvokeAsync("Topics", new { @CurrentTopicId = currentTopicId })
                 </div>
             </div>
         </div>

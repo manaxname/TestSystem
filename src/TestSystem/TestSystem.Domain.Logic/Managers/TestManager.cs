@@ -36,7 +36,7 @@ namespace TestSystem.Domain.Logic.Managers
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        public async Task<int> CreateTestAsync(int topicId, string name, int time)
+        public async Task CreateTestAsync(int topicId, string name, int time)
         {
             var domainTest = Helper.CreateDomainTest(topicId, name, time);
 
@@ -44,10 +44,10 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.Tests.Add(dataTest);
 
-            return await _dbContext.SaveChangesAsync(default);
+            await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task<int> CreateUserTestAsync(DomainUserTest userTest)
+        public async Task CreateUserTestAsync(DomainUserTest userTest)
         {
             await _userManager.ThrowIfUserNotExistsAsync(userTest.UserId);
             await ThrowIfTestNotExistsAsync(userTest.TestId);
@@ -56,7 +56,7 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.UserTests.Add(dataUserTest);
 
-            return await _dbContext.SaveChangesAsync(default);
+            await _dbContext.SaveChangesAsync(default);
         }
 
         public async Task DeleteTestAsync(int id)
@@ -129,7 +129,7 @@ namespace TestSystem.Domain.Logic.Managers
             return await _dbContext.UserTopics.AnyAsync(x => x.UserId == usetId && x.TopicId == topicId);
         }
 
-        public async Task<int> UpdateUserTestPointsAsync(int userId, int testId, int points)
+        public async Task UpdateUserTestPointsAsync(int userId, int testId, int points)
         {
             var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
 
@@ -142,10 +142,10 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.UserTests.Update(dataUserTest);
 
-            return await _dbContext.SaveChangesAsync(default);
+            await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task<int> UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time)
+        public async Task UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time)
         {
             var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
 
@@ -158,10 +158,10 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.UserTests.Update(dataUserTest);
 
-            return await _dbContext.SaveChangesAsync(default);
+            await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task<int> UpdateUserTestStatusAsync(int userId, int testId, string status)
+        public async Task UpdateUserTestStatusAsync(int userId, int testId, string status)
         {
             var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
 
@@ -174,7 +174,7 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.UserTests.Update(dataUserTest);
 
-            return await _dbContext.SaveChangesAsync(default);
+            await _dbContext.SaveChangesAsync(default);
         }
 
         public async Task ThrowIfTestNotExistsAsync(int testId)
@@ -206,9 +206,9 @@ namespace TestSystem.Domain.Logic.Managers
                 .ToListAsync();
         }
 
-        public async Task<int> CreateTopicAsync(string name)
+        public async Task<int> CreateTopicAsync(string name, int passingPoints)
         {
-            var domainTopic = Helper.CreateDomainTopic(name);
+            var domainTopic = Helper.CreateDomainTopic(name, passingPoints);
 
             var dataTopic = _mapper.Map<DataTopic>(domainTopic);
 
@@ -219,7 +219,7 @@ namespace TestSystem.Domain.Logic.Managers
             return dataTopic.Id;
         }
 
-        public async Task<int> CreateUserTopicAsync(DomainUserTopic userTopic)
+        public async Task CreateUserTopicAsync(DomainUserTopic userTopic)
         {
             await ThrowIfUserTopicAlreadyExistsAsync(userTopic.UserId, userTopic.TopicId);
 
@@ -227,7 +227,7 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.UserTopics.Add(dataUserTopic);
 
-            return await _dbContext.SaveChangesAsync(default);
+            await _dbContext.SaveChangesAsync(default);
         }
 
         public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync()
@@ -284,6 +284,52 @@ namespace TestSystem.Domain.Logic.Managers
                 .ToListAsync();
 
             return domainUserTests;
+        }
+
+        public async Task UpdateUserTopicStatus(int userId, int topicId, string status)
+        {
+            var dataUserTopic = await _dbContext.UserTopics
+              .SingleOrDefaultAsync(x => x.UserId == userId && x.TopicId == topicId);
+
+            if (dataUserTopic == null)
+            {
+                throw new UserTopicNotFoundException($"userId: {userId}, topicId: {topicId}");
+            }
+
+            dataUserTopic.Status = status;
+
+            _dbContext.UserTopics.Update(dataUserTopic);
+
+            await _dbContext.SaveChangesAsync(default);
+        }
+
+        public async Task<DomainUserTopic> GetUserTopicAsync(int userId, int topicId)
+        {
+            var dataUserTopic = await _dbContext.UserTopics
+                .SingleOrDefaultAsync(x => x.UserId == userId && x.TopicId == topicId);
+
+            if (dataUserTopic == null)
+            {
+                throw new UserTopicNotFoundException($"userId: {userId}, topicId: {topicId}");
+            }
+
+            var domainUserTopic = _mapper.Map<DomainUserTopic>(dataUserTopic);
+
+            return domainUserTopic;
+        }
+
+        public async Task<DomainTopic> GetTopicByIdAsync(int id)
+        {
+            var dataTopic = await _dbContext.Topics.FirstOrDefaultAsync(topic => topic.Id == id);
+
+            if (dataTopic == null)
+            {
+                throw new TopicNotFoundException(id.ToString());
+            }
+
+            var domainTopic = _mapper.Map<DomainTopic>(dataTopic);
+
+            return domainTopic;
         }
     }
 }

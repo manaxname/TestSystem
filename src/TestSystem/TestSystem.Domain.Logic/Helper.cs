@@ -28,11 +28,12 @@ namespace TestSystem.Domain.Logic
             };
         }
 
-        public static Topic CreateDomainTopic(string name)
+        public static Topic CreateDomainTopic(string name, int passingPoints)
         {
             return new Topic
             {
-                Name = name
+                Name = name,
+                PassingPoints = passingPoints
             };
         }
 

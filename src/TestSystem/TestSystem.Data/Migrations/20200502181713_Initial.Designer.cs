@@ -10,7 +10,7 @@ using TestSystem.Data;
 namespace TestSystem.Data.Migrations
 {
     [DbContext(typeof(TestSystemContext))]
-    [Migration("20200430164952_Initial")]
+    [Migration("20200502181713_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -196,9 +196,6 @@ namespace TestSystem.Data.Migrations
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TestMinutes")
-                        .HasColumnType("int");
 
                     b.HasKey("UserId", "TestId");
 

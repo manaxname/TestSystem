@@ -121,7 +121,6 @@ namespace TestSystem.Data.Migrations
                     Status = table.Column<string>(nullable: true),
                     Points = table.Column<int>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false),
-                    TestMinutes = table.Column<int>(nullable: false),
                     IsDeleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
