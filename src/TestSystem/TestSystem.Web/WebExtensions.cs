@@ -14,14 +14,16 @@ namespace TestSystem.Web
 {
     public static class WebExtensions
     {
-        public static string ImagesFolderFullName { get; private set; }
-        public static string ImagesFolderName { get; private set; }
+        public static string ImagesFolderFullName { get; set; }
+        public static string ImagesFolderName { get; set; }
 
-        public static IServiceCollection AddWebServices(this IServiceCollection services, string imagesFolderFullName)
+        public static string SenderEmail  { get; set; }
+        public static string SenderEmailPassword { get; set; }
+        public static string SmtpHost  { get; set; }
+        public static int SmtpPort { get; set; }
+
+        public static IServiceCollection AddWebServices(this IServiceCollection services)
         {
-            ImagesFolderFullName = imagesFolderFullName;
-            ImagesFolderName = Path.GetFileName(imagesFolderFullName);
-
             services.AddSingleton(provider => new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new DomainViewProfile());

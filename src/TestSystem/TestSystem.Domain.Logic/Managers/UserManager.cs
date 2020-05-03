@@ -25,20 +25,21 @@ namespace TestSystem.Domain.Logic.Managers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<int> CreateUserAsync(string email, string password, string role)
+        public async Task<DomainUser> CreateUserAsync(string email, string password, string role)
         {
             await ThrowIfUserAlreadyExistsAsync(email);
 
             var passwordHash = CryptographyHelper.GetSha256Hash(password);
-            var newDomainUser = Helper.CreateDomainUser(email, passwordHash, role);
-            var newDataUser = _mapper.Map<DataUser>(newDomainUser);
+            var domainUser = Helper.CreateDomainUser(email, passwordHash, role);
+            var dataUser = _mapper.Map<DataUser>(domainUser);
 
-            _dbContext.Users.Add(newDataUser);
+            _dbContext.Users.Add(dataUser);
+            await _dbContext.SaveChangesAsync(default);
 
-            return await _dbContext.SaveChangesAsync(default);
+            return _mapper.Map<DomainUser>(dataUser);
         }
 
-        public async Task<int> CreateUserAsync(DomainUser user)
+        public async Task<DomainUser> CreateUserAsync(DomainUser user)
         {
             await ThrowIfUserAlreadyExistsAsync(user.Email);
 
@@ -46,7 +47,10 @@ namespace TestSystem.Domain.Logic.Managers
 
             _dbContext.Users.Add(dataUser);
 
-            return await _dbContext.SaveChangesAsync(default);
+            _dbContext.Users.Add(dataUser);
+            await _dbContext.SaveChangesAsync(default);
+
+            return _mapper.Map<DomainUser>(dataUser);
         }
 
         public async Task DeleteUserAsync(string email)
@@ -127,6 +131,24 @@ namespace TestSystem.Domain.Logic.Managers
             {
                 throw new UserNotFoundException(id.ToString());
             }
+        }
+
+        public async Task UpdateUserConfirmStatus(int userId, bool isConfirmed)
+        {
+            DataUser dataUser = await _dbContext.Users.FirstAsync(x => x.Id == userId);
+
+            dataUser.IsConfirmed = isConfirmed;
+
+            await _dbContext.SaveChangesAsync(default);
+        }
+
+        public async Task UpdateUserConfirmationToken(int userId, Guid confgirmToken)
+        {
+            DataUser dataUser = await _dbContext.Users.FirstAsync(x => x.Id == userId);
+
+            dataUser.ConfirmationToken = confgirmToken;
+
+            await _dbContext.SaveChangesAsync(default);
         }
 
         public bool ValidateUserPassword(DomainUser user, string userPassword)

@@ -31,7 +31,9 @@ namespace TestSystem.Data.Migrations
                     Email = table.Column<string>(nullable: true),
                     PasswordHash = table.Column<string>(nullable: true),
                     Role = table.Column<string>(nullable: true),
-                    IsDeleted = table.Column<bool>(nullable: false)
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    ConfirmationToken = table.Column<Guid>(nullable: false),
+                    IsConfirmed = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

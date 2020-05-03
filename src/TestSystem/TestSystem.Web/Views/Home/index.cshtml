@@ -1,8 +1,13 @@
 ﻿@{
-    Layout = "_LayoutHome";
-
     ViewData["Title"] = "Home Page";
+
+    int? currentTopicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        currentTopicId = int.Parse(ViewData["TopicId"].ToString());
+    }
 }
 
 <h1 class="display-4 font-weight-normal d-flex justify-content-center">Welcome!</h1>
 
+@await Component.InvokeAsync("Topics", new { @CurrentTopicId = currentTopicId })

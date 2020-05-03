@@ -9,6 +9,7 @@ using DomainUserAnswer = TestSystem.Domain.Models.UserAnswer;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
 using DomainTopic = TestSystem.Domain.Models.Topic;
 using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
+using DomainUser = TestSystem.Domain.Models.User;
 
 using TestSystem.Web.Models;
 
@@ -19,6 +20,7 @@ namespace TestSystem.Domain.Logic.Mappers
         public DomainViewProfile()
         {
             CreateMap<DomainTopic, TopicModel>().ReverseMap();
+            CreateMap<DomainUser, UserModel>().ReverseMap();
 
             CreateMap<DomainTest, TestModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(map => map.Id))

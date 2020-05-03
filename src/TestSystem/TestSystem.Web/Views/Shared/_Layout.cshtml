@@ -17,6 +17,7 @@
     <script type="text/javascript" src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="~/lib/jquery/jquery.min.js"></script>
     <script type="text/javascript" src="~/lib/popper.js/popper.min.js"></script>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
 <body>
 
@@ -49,17 +50,8 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-2">
-                    <div class="sidebar-item">
-                        <div class="make-me-sticky">
-                            @await Component.InvokeAsync("Topics", new { @CurrentTopicId = currentTopicId })
-                        </div>
-                    </div>
-                </div>
-                <div class="col-10">
-                    <div class="content-section">
-                        @RenderBody()
-                    </div>
+                <div class="container content-section">
+                    @RenderBody()
                 </div>
             </div>
         </div>

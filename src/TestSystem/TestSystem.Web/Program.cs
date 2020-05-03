@@ -15,6 +15,7 @@ using TestSystem.Data;
 using TestSystem.Domain.Logic;
 using TestSystem.Domain.Logic.Interfaces;
 using TestSystem.Domain.Logic.Managers;
+using TestSystem.Domain.Models;
 
 namespace TestSystem.Web
 {
@@ -44,7 +45,8 @@ namespace TestSystem.Web
                     var userManager = (UserManager)services.GetRequiredService<IUserManager>();
                     if (!userManager.IsUserExistsAsync(adminEmail).GetAwaiter().GetResult())
                     {
-                        userManager.CreateUserAsync(adminEmail, adminPassword, adminRole).GetAwaiter().GetResult();
+                        User admin =  userManager.CreateUserAsync(adminEmail, adminPassword, adminRole).GetAwaiter().GetResult();
+                        userManager.UpdateUserConfirmStatus(admin.Id, true).GetAwaiter().GetResult();
                     }
                 }
                 catch (Exception ex)

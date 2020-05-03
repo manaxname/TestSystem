@@ -1,0 +1,13 @@
+﻿@{
+    Layout = null;
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
+}
+
+<script>
+    customRedirect("Test/TopicIsDone?TopicId=@topicId");
+</script>

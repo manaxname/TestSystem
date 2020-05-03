@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +13,8 @@ using TestSystem.Data;
 using TestSystem.Domain.Logic;
 using TestSystem.Domain.Logic.Interfaces;
 using TestSystem.Domain.Logic.Mappers;
+
+using reCAPTCHA.AspNetCore;
 
 namespace TestSystem.Web
 {
@@ -33,7 +36,18 @@ namespace TestSystem.Web
 
             services.AddDataServices(connectionString);
             services.AddDomainServices();
-            services.AddWebServices(imagesFolderFullName);
+            services.AddWebServices();
+
+            WebExtensions.ImagesFolderFullName = imagesFolderFullName;
+            WebExtensions.ImagesFolderName = Path.GetFileName(imagesFolderFullName);
+            IConfigurationSection emailConstants = Configuration.GetSection("EmailConstants");
+            WebExtensions.SenderEmail = emailConstants.GetValue<string>("SenderEmail");
+            WebExtensions.SenderEmailPassword = emailConstants.GetValue<string>("SenderEmailPassword");
+            WebExtensions.SmtpHost = emailConstants.GetValue<string>("SmtpHost");
+            WebExtensions.SmtpPort = emailConstants.GetValue<int>("SmtpPort");
+
+            //services.Configure<RecaptchaSettings>(Configuration.GetSection("RecaptchaSettings"));
+            //services.AddTransient<IRecaptchaService, RecaptchaService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

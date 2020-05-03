@@ -1,0 +1,18 @@
+﻿
+@{
+    ViewData["Title"] = "TopicIsDone";
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
+}
+
+
+<h4  class="d-flex justify-content-center">Message's been sent to your email.</h4>
+<hr />
+
+<div  class="d-flex justify-content-center"> 
+    @Html.ActionLink("Back to Topics", "Index", "Home", null, new { @class = "btn btn-secondary" })
+</div>

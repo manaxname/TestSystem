@@ -1,12 +1,16 @@
 ﻿@model IEnumerable<TestSystem.Web.Models.TestModel>
 
 @{
+    Layout = "_LayoutSideBar";
+
     ViewData["Title"] = "Tests";
 
     int topicId = int.Parse(ViewData["TopicId"].ToString());
 }
 
-<h4>Tests</h4>
+<h4 class="d-flex justify-content-center">Tests</h4>
+<hr />
+
 <p>
     @Html.ActionLink("Create new Test", "CreateTest", "Test", new { @TopicId = topicId }, new { @class = "btn btn-primary" })
 </p>
@@ -44,3 +48,7 @@
         }
     </tbody>
 </table>
+
+<div>
+    @Html.ActionLink("Back to Topics", "Index", "Home", null, new { @class = "btn btn-secondary" })
+</div>

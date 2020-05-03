@@ -10,7 +10,7 @@ using TestSystem.Data;
 namespace TestSystem.Data.Migrations
 {
     [DbContext(typeof(TestSystemContext))]
-    [Migration("20200502181713_Initial")]
+    [Migration("20200503201514_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -136,8 +136,14 @@ namespace TestSystem.Data.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<Guid>("ConfirmationToken")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");

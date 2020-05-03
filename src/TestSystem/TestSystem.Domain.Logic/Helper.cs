@@ -14,8 +14,10 @@ namespace TestSystem.Domain.Logic
             {
                 Email = email,
                 PasswordHash = passwordHash,
-                Role = role
-            }; ;
+                Role = role,
+                ConfirmationToken = Guid.NewGuid(),
+                IsConfirmed = false
+            };
         }
 
         public static Test CreateDomainTest(int topicId, string name, int time)

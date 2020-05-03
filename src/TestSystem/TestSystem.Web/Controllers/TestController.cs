@@ -313,7 +313,10 @@ namespace TestSystem.Web.Controllers
 
             if (userTest.Status == TestStatus.Finished)
             {
-                await FinishTestAsync(userId, topicId, testId);
+                if (await FinishTestAndSendEmailIfTopicIsDoneAsync(userId, topicId, testId))
+                {
+                    return RedirectToAction("EndTopic", "Test", new { @TopicId = topicId });
+                }
 
                 return PartialView("_EndTest");
             }
@@ -335,7 +338,10 @@ namespace TestSystem.Web.Controllers
 
                 if (secondsLeft <= 0)
                 {
-                    await FinishTestAsync(userId, topicId, testId);
+                    if (await FinishTestAndSendEmailIfTopicIsDoneAsync(userId, topicId, testId))
+                    {
+                        return RedirectToAction("EndTopic", "Test", new { @TopicId = topicId });
+                    }
 
                     return BadRequest("Time's been expired.");
                 }
@@ -410,7 +416,10 @@ namespace TestSystem.Web.Controllers
             int secondsLeft = test.Minutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
             if (secondsLeft <= 0)
             {
-                await FinishTestAsync(userId, topicId, testId);
+                if (await FinishTestAndSendEmailIfTopicIsDoneAsync(userId, topicId, testId))
+                {
+                    return RedirectToAction("EndTopic", "Test", new { @TopicId = topicId });
+                }
 
                 return PartialView("_EndTest"); // to redirect from ajax post
             }
@@ -442,7 +451,10 @@ namespace TestSystem.Web.Controllers
 
             if (submitButtonValue == "Finish" && currQuestionStage == stagesCount)
             {
-                await FinishTestAsync(userId, topicId, testId);
+                if (await FinishTestAndSendEmailIfTopicIsDoneAsync(userId, topicId, testId))
+                {
+                    return RedirectToAction("EndTopic", "Test", new { @TopicId = topicId });
+                }
 
                 return PartialView("_EndTest");
             }
@@ -476,6 +488,21 @@ namespace TestSystem.Web.Controllers
 
             return PartialView("_StartTest", startTest);
         }
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForUsers")]
+        public ActionResult EndTopic(int topicId)
+        {
+            return PartialView("_EndTopic", new { @TopicId = topicId });
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForUsers")]
+        public ActionResult TopicIsDone(int topicId)
+        {
+            return View();
+        }
+
 
         private async Task<List<int>> CreateUserAnswersAndGetQuestionIdsAsync(int testId, int userId)
         {
@@ -550,7 +577,7 @@ namespace TestSystem.Web.Controllers
             }
         }
 
-        private async Task FinishTestAsync(int userId, int topicId, int testId)
+        private async Task<bool> FinishTestAndSendEmailIfTopicIsDoneAsync(int userId, int topicId, int testId) // true - send email
         {
             await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.Finished);
 
@@ -594,25 +621,34 @@ namespace TestSystem.Web.Controllers
                 int userPoints = userTestsInTopic.Sum(x => x.Points);
                 DomainTopic topic = await _testManager.GetTopicByIdAsync(topicId);
 
-                await SendEmailToUserAboutPassingTheTopic(User.Identity.Name, topic, userPoints);
+                await _testManager.UpdateUserTopicStatus(userId, topicId, TopicStatus.Finished);
+
+                SendEmailToUserAboutPassingTheTopicAsync(User.Identity.Name, topic, userPoints); // Async call, message's beeing sent
+
+                return true;
             }
+
+            return false;
         }
 
-        private async Task SendEmailToUserAboutPassingTheTopic(string userEmail, DomainTopic topic, int userPoints)
+        private async Task SendEmailToUserAboutPassingTheTopicAsync(string userEmail, DomainTopic topic, int userPoints)
         {
+            string subject = "Test System";
+            string senderName = "Test System Administration";
+
             if (userPoints >= topic.PassingPoints)
             {
-                string subject = "Test System";
                 string messgae = $"You succesfully passed all tests in {topic.Name}! Your points: {userPoints}";
 
-                await _emailService.SendEmailAsync(userEmail, subject, messgae);
+                await _emailService.SendEmailAsync(senderName, WebExtensions.SenderEmail, WebExtensions.SenderEmailPassword, WebExtensions.SmtpHost,
+                    WebExtensions.SmtpPort, userEmail, subject, messgae);
             }
             else
             {
-                string subject = "Test System";
                 string messgae = $"Sorry, you haven't gained enough points in {topic.Name}! Your points: {userPoints}";
 
-                await _emailService.SendEmailAsync(userEmail, subject, messgae);
+                await _emailService.SendEmailAsync(senderName, WebExtensions.SenderEmail, WebExtensions.SenderEmailPassword, WebExtensions.SmtpHost,
+                    WebExtensions.SmtpPort, userEmail, subject, messgae);
             }
         }
     }

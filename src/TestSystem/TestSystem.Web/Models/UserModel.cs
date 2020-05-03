@@ -9,5 +9,7 @@ namespace TestSystem.Web.Models
     {
         public int Id { get; set; }
         public string Email { get; set; }
+        public Guid ConfirmationToken { get; set; }
+        public bool IsConfirmed { get; set; }
     }
 }

@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<TestSystem.Web.Models.QuestionModel>
 
 @{
+    Layout = "_LayoutSideBar";
+
     ViewData["Title"] = "Edit Tests";
 
     int testId = 0;
@@ -16,7 +18,9 @@
     }
 }
 
-<h4>@ViewData["TestName"] </h4>
+<h4 class="d-flex justify-content-center">@ViewData["TestName"]</h4>
+<hr />
+
 <p>
     @Html.ActionLink("Create new Question", "CreateQuestion", "Test",
         new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-primary" })
@@ -82,6 +86,7 @@
         }
     </tbody>
 </table>
+
 <div>
     @Html.ActionLink("Back to Tests", "ShowTestsInTopicToAdmin", "Test", new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-secondary" })
 </div>

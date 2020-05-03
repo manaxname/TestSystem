@@ -1,6 +1,8 @@
 ﻿@model TestSystem.Web.Models.AnswerModel
 
 @{
+    Layout = "_LayoutSideBar";
+
     ViewData["Title"] = "Create Answer";
 
     int testId = 0;
@@ -20,10 +22,17 @@
     {
         questionType = ViewData["QuestionType"].ToString();
     }
+
+    int? topicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        topicId = int.Parse(ViewData["TopicId"].ToString());
+    }
 }
 
-<h4>Create Answer</h4>
+<h4 class="d-flex justify-content-center">Create Answer</h4>
 <hr />
+
 <div class="d-flex justify-content-center">
     <div class="col-md-4">
         <form asp-controller="Test" asp-action="CreateAnswer">
@@ -55,7 +64,7 @@
                 <span asp-validation-for="QuestionId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <input asp-for="QuestionType" class="form-control" hidden value="@questionType"/>
+                <input asp-for="QuestionType" class="form-control" hidden value="@questionType" />
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -65,6 +74,6 @@
 </div>
 
 <div>
-    @Html.ActionLink("Back to Answers", "EditQuestion", "Test", 
-        new { @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-secondary" })
+    @Html.ActionLink("Back to Answers", "EditQuestion", "Test",
+        new { @TopicId = topicId,  @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-secondary" })
 </div>

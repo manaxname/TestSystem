@@ -1,6 +1,8 @@
 ﻿@model TestSystem.Web.Models.QuestionModel
 
 @{
+    Layout = "_LayoutSideBar";
+
     int? testId = null;
     if (ViewData.ContainsKey("TestId"))
     {
