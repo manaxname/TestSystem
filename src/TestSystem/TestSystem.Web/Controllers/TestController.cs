@@ -18,6 +18,7 @@ using TestSystem.Common;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using TestSystem.Data.Models;
 
 namespace TestSystem.Web.Controllers
 {
@@ -169,7 +170,7 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> EditTest(int topicId, int testId)
         {
-            List<QuestionModel> questions = (await _questionManager.GetQuestionsByTestIdAsync(testId))
+            List<QuestionModel> questions = (await _questionManager.GetQuestionsByTestIdSortedByStageAsync(testId))
                 .Select(question => 
                 {
                     var questionModel = _mapper.Map<QuestionModel>(question);
@@ -237,7 +238,6 @@ namespace TestSystem.Web.Controllers
         [Authorize(Policy = "OnlyForAdmins")]
         public async Task<IActionResult> EditQuestion(int topicId, int testId, int questionId, string questionType)
         {
-
             List<AnswerModel> answers = (await _answersManager.GetAnswersByQuestionIdAsync(questionId))
                 .Select(answer => _mapper.Map<AnswerModel>(answer))
                 .ToList();
@@ -324,7 +324,7 @@ namespace TestSystem.Web.Controllers
             {
                 await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.NotFinished);
 
-                userQuestionIds = await CreateUserAnswersAndGetQuestionIdsAsync(testId, userId);
+                userQuestionIds = await CreateUserAnswersAndGetQuestionIdsSortedByStageAsync(testId, userId);
                 currQuestion = await _questionManager.GetQuestionByIdAsync(userQuestionIds[0]);
                 secondsLeft = test.Minutes * _toSecondsConstant;
                 startTime = DateTime.Now;
@@ -343,10 +343,10 @@ namespace TestSystem.Web.Controllers
                         return RedirectToAction("EndTopic", "Test", new { @TopicId = topicId });
                     }
 
-                    return BadRequest("Time's been expired.");
+                    return PartialView("_EndTest");
                 }
 
-                (await _questionManager.GetUserQuestionsByTestIdAsync(userId, testId)).ToList()
+                (await _questionManager.GetUserQuestionsByTestIdSortedByStageAsync(userId, testId)).ToList()
                     .ForEach(question => userQuestionIds.Add(question.Id));
 
                 currQuestion = await _questionManager.GetQuestionByIdAsync(userQuestionIds[0]);
@@ -503,8 +503,29 @@ namespace TestSystem.Web.Controllers
             return View();
         }
 
+        [HttpGet]
+        [Authorize(Policy = "OnlyForUsers")]
+        public async Task<ActionResult> TestTimeExpired(int topicId, int testId)
+        {
+            int userId = await _userManager.GetUserIdAsync(User.Identity.Name);
+            DomainTest test = await _testManager.GetTestByIdAsync(testId);
+            DomainUserTest userTest = await _testManager.GetUserTestAsync(userId, testId);
+            int secondsLeft = test.Minutes * 60 - Convert.ToInt32(Math.Abs((userTest.StartTime - DateTime.Now).TotalSeconds));
 
-        private async Task<List<int>> CreateUserAnswersAndGetQuestionIdsAsync(int testId, int userId)
+            if (secondsLeft <= 0)
+            {
+                if (await FinishTestAndSendEmailIfTopicIsDoneAsync(userId, topicId, testId))
+                {
+                    return RedirectToAction("EndTopic", "Test", new { @TopicId = topicId });
+                }
+
+                return PartialView("_EndTest");
+            }
+
+            return BadRequest("TimeExpired");
+        }
+
+        private async Task<List<int>> CreateUserAnswersAndGetQuestionIdsSortedByStageAsync(int testId, int userId)
         {
             var questionIds = new List<int>();
             int stagesCount = (await _questionManager.GetTestStagesByTestIdAsync(testId)).ToList().Count;
@@ -581,7 +602,7 @@ namespace TestSystem.Web.Controllers
         {
             await _testManager.UpdateUserTestStatusAsync(userId, testId, TestStatus.Finished);
 
-            List<DomainQuestion> questions = (await _questionManager.GetUserQuestionsByTestIdAsync(userId, testId)).ToList();
+            List<DomainQuestion> questions = (await _questionManager.GetUserQuestionsByTestIdSortedByStageAsync(userId, testId)).ToList();
             int points = 0;
             foreach (var question in questions)
             {
@@ -645,7 +666,7 @@ namespace TestSystem.Web.Controllers
             }
             else
             {
-                string messgae = $"Sorry, you haven't gained enough points in {topic.Name}! Your points: {userPoints}";
+                string messgae = $"Sorry, you haven't gained enough points in {topic.Name}! Your points: {userPoints} / {topic.PassingPoints}";
 
                 await _emailService.SendEmailAsync(senderName, WebExtensions.SenderEmail, WebExtensions.SenderEmailPassword, WebExtensions.SmtpHost,
                     WebExtensions.SmtpPort, userEmail, subject, messgae);

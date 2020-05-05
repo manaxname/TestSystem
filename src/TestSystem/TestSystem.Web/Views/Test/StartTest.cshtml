@@ -20,8 +20,8 @@
     window.onload = function () {
         var seconds = @Model.SecondsLeft;
         var display = document.querySelector('#time');
-        var getUrl = "EndTest?userId=@Model.UserId&testId=@Model.TestId";
-        var redirectUrl = "Test/ShowTestsToUser";
+        var getUrl = "TestTimeExpired?TopicId=@Model.TopicId&TestId=@Model.TestId";
+        var redirectUrl = "Test/ShowTestsInTopicToUser?TopicId=@Model.TopicId";
         startTimer(seconds, display, getUrl, redirectUrl);
     };
 </script>

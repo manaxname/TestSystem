@@ -79,7 +79,7 @@ namespace TestSystem.Domain.Logic.Managers
             return await _dbContext.Questions.CountAsync(q => q.TestId == testId);
         }
 
-        public async Task<IReadOnlyCollection<DomainQuestion>> GetQuestionsByTestIdAsync(int testId)
+        public async Task<IReadOnlyCollection<DomainQuestion>> GetQuestionsByTestIdSortedByStageAsync(int testId)
         {
             await _testManager.ThrowIfTestNotExistsAsync(testId);
 
@@ -123,11 +123,13 @@ namespace TestSystem.Domain.Logic.Managers
         {
             await _testManager.ThrowIfTestNotExistsAsync(testId);
 
-            var stages = await _dbContext.Questions
+            List<int> stages = await _dbContext.Questions
                 .Where(question => question.TestId == testId)
                 .GroupBy(x => x.Stage)
                 .Select(x => x.Key)
                 .ToListAsync();
+
+            stages.Sort();
 
             return stages;
         }
@@ -137,16 +139,18 @@ namespace TestSystem.Domain.Logic.Managers
             return await _dbContext.Questions.AnyAsync(question => question.Id == id);
         }
 
-        public async Task<IReadOnlyCollection<DomainQuestion>> GetUserQuestionsByTestIdAsync(int userId, int testId)
+        public async Task<IReadOnlyCollection<DomainQuestion>> GetUserQuestionsByTestIdSortedByStageAsync(int userId, int testId)
         {
             await _userManager.ThrowIfUserNotExistsAsync(userId);
             await _testManager.ThrowIfTestNotExistsAsync(testId);
 
-            var dataQuestions = await _dbContext.Questions
+            List<DataQuestion> dataQuestions = await _dbContext.Questions
                 .Where(x => x.TestId == testId)
                 .Include(x => x.Answers)
                     .ThenInclude(x => x.UserAnswers)
                 .ToListAsync();
+
+            dataQuestions.Sort(new Comparison<DataQuestion>((x, y) => x.Stage.CompareTo(y.Stage)));
 
             var questions = new Dictionary<int, DomainQuestion>();
 

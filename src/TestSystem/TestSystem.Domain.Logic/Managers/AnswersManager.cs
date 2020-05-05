@@ -127,8 +127,6 @@ namespace TestSystem.Domain.Logic.Managers
 
         public async Task<IReadOnlyCollection<DomainUserAnswer>> GetUserAnswersByQuestionIdAsync(int userId, int questionId)
         {
-            await ThrowIfUserAnswerNotExistsAsync(userId, questionId);
-
             var domainUserAnswers = await _dbContext.UserAnswers.Include(x => x.Answer)
                 .Where(x => x.UserId == userId && x.Answer.QuestionId == questionId)
                 .Select(x => _mapper.Map<DomainUserAnswer>(x))
