@@ -37,3 +37,14 @@ function startTimer(duration, display, getUrl, redirectUrl) {
         }
     }, 1000);
 }
+
+function loadAsync() {
+    $(document).ready(function () {
+        $('<img src="/Images/ajax-loader.gif"')
+            .appendTo('#someID')
+
+        $("#box").load("/examples/html/test-content.html");
+
+        $('#someID').find('img').remove();
+    });
+}

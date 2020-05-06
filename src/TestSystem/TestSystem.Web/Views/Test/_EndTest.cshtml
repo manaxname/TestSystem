@@ -1,13 +1,14 @@
-﻿@{
+﻿@model TestSystem.Web.Models.EndTestModel
+
+@{
     Layout = null;
 
-    int? topicId = null;
-    if (ViewData.ContainsKey("TopicId"))
-    {
-        topicId = int.Parse(ViewData["TopicId"].ToString());
-    }
+    //int? topicId = null;
+    //if (ViewData.ContainsKey("TopicId"))
+    //{
+    //    topicId = int.Parse(ViewData["TopicId"].ToString());
+    //}
 }
-
 <script>
-    customRedirect("Test/ShowTestsInTopicToUser?TopicId=@topicId");
+    customRedirect("Test/ShowTestsInTopicToUser?TopicId=@Model.TopicId");
 </script>

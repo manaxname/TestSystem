@@ -8,6 +8,20 @@
     }
 }
 
-<h1 class="display-4 font-weight-normal d-flex justify-content-center">Welcome!</h1>
+@if ((await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded ||
+(await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded)
+{
+    <h1 class="display-4 font-weight-normal d-flex justify-content-center">Topics</h1>
+    <hr />
+}
+else
+{
+    <div>
+        Вас приветствует система тестирования.
+        Чтобы пройти тестирование - нужно зарегистрироваться.
+    </div>
+    <hr />
+    <a href="/Account/Register">Register </a><span>|</span><a href="/Account/Login"> Login</a>
+}
 
 @await Component.InvokeAsync("Topics", new { @CurrentTopicId = currentTopicId })
