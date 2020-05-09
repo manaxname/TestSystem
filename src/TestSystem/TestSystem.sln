@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSystem.Common", "TestSy
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSystem.Data", "TestSystem.Data\TestSystem.Data.csproj", "{BC879B15-052E-4E39-B7CF-447C5BFA5D56}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSystem.Data.Tests", "TestSystem.Data.Tests\TestSystem.Data.Tests.csproj", "{C920ED0F-1281-4B5D-BB08-794513DAF1B1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSystem.Domain", "TestSystem.Domain\TestSystem.Domain.csproj", "{7100D1EF-5206-4DAB-B34D-0C52D346BF36}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSystem.Domain.Logic", "TestSystem.Domain.Logic\TestSystem.Domain.Logic.csproj", "{0DD32726-66AF-46B7-B93D-7BAD28D6410C}"
@@ -31,10 +29,6 @@ Global
 		{BC879B15-052E-4E39-B7CF-447C5BFA5D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC879B15-052E-4E39-B7CF-447C5BFA5D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC879B15-052E-4E39-B7CF-447C5BFA5D56}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C920ED0F-1281-4B5D-BB08-794513DAF1B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C920ED0F-1281-4B5D-BB08-794513DAF1B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C920ED0F-1281-4B5D-BB08-794513DAF1B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C920ED0F-1281-4B5D-BB08-794513DAF1B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7100D1EF-5206-4DAB-B34D-0C52D346BF36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7100D1EF-5206-4DAB-B34D-0C52D346BF36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7100D1EF-5206-4DAB-B34D-0C52D346BF36}.Release|Any CPU.ActiveCfg = Release|Any CPU

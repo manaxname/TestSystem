@@ -17,10 +17,10 @@
         int.TryParse(ViewData["QuestionId"].ToString(), out questionId);
     }
 
-    string questionType = string.Empty;
+    QuestionTypes? questionType = null;
     if (ViewData.ContainsKey("QuestionType"))
     {
-        questionType = ViewData["QuestionType"].ToString();
+        questionType = (QuestionTypes)Enum.Parse(typeof(QuestionTypes), ViewData["QuestionType"].ToString());
     }
 
     int? topicId = null;

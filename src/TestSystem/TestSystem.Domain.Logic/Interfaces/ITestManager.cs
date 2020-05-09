@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TestSystem.Common;
 using TestSystem.Domain.Models;
 
 namespace TestSystem.Domain.Logic.Interfaces
@@ -23,10 +24,10 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task<IReadOnlyCollection<UserTest>> GetUserTestsInTopicAsync(int topicId, int userId);
         Task<IReadOnlyCollection<UserTest>> GetUserTestsAsync(int userId, params int[] testIds);
         Task<UserTest> GetUserTestAsync(int userId, int testId);
-        Task UpdateUserTestStatusAsync(int userId, int testId, string status);
+        Task UpdateUserTestStatusAsync(int userId, int testId, TestStatus status);
         Task UpdateUserTestPointsAsync(int userId, int testId, int points);
         Task UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time);
-        Task UpdateUserTopicStatus(int userId, int topicId, string status);
+        Task UpdateUserTopicStatus(int userId, int topicId, TopicStatus status);
         Task<bool> IsTestExistsAsync(int id);
         Task<bool> IsUserTestExistsAsync(int usetId, int testId);
         Task<bool> IsUserTopicExistsAsync(int usetId, int topicId);

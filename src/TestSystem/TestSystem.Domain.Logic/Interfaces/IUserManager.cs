@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
+using TestSystem.Common;
 using TestSystem.Domain.Models;
 
 namespace TestSystem.Domain.Logic.Interfaces
 {
     public interface IUserManager
     {
-        Task<User> CreateUserAsync(string email, string password, string role);
+        Task<User> CreateUserAsync(string email, string password, UserRoles role);
         Task<User> CreateUserAsync(User user);
         Task DeleteUserAsync(string email);
         Task UpdateUserConfirmStatus(int userId, bool isConfirmed);

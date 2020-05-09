@@ -17,10 +17,10 @@
         int.TryParse(ViewData["QuestionId"].ToString(), out questionId);
     }
 
-    string questionType = string.Empty;
+    QuestionTypes? questionType = null;
     if (ViewData.ContainsKey("QuestionType"))
     {
-        questionType = ViewData["QuestionType"].ToString();
+        questionType = (QuestionTypes)Enum.Parse(typeof(QuestionTypes), ViewData["QuestionType"].ToString());
     }
 
     int answersCount = 0;
@@ -45,7 +45,7 @@
         @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
             new { @TopicId = topicId, @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })
     }
-    else if (questionType == QuestionTypes.Option)
+    else if (questionType == (int)QuestionTypes.Option)
     {
         @Html.ActionLink("Create new Answer", "CreateAnswer", "Test",
               new { @TopicId = topicId, @TestId = testId, @QuestionId = questionId, @QuestionType = questionType }, new { @class = "btn btn-primary" })

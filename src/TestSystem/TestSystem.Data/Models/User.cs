@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TestSystem.Common;
 
 namespace TestSystem.Data.Models
 {
@@ -10,7 +11,7 @@ namespace TestSystem.Data.Models
         public int Id { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public string Role { get; set; }
+        public UserRoles Role { get; set; }
         public bool IsDeleted { get; set; }
         public Guid ConfirmationToken { get; set; }
         public bool IsConfirmed { get; set; }

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TestSystem.Common;
 
 namespace TestSystem.Domain.Models
 {
     public class UserTopic
     {
-        public string Status { get; set; }
+        public TopicStatus Status { get; set; }
         public int Points { get; set; }
         public bool IsDeleted { get; set; }
 

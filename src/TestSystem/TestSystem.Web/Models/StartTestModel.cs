@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TestSystem.Common;
 
 namespace TestSystem.Web.Models
 {
@@ -18,7 +19,7 @@ namespace TestSystem.Web.Models
         public int CurrQuestionId { get; set; }
         public int CurrQuestionStage { get; set; }
         public string CurrQuestionText { get; set; }
-        public string CurrQuestionType { get; set; }
+        public QuestionTypes CurrQuestionType { get; set; }
         public string CurrQuestionImageLocation { get; set; }
         public IEnumerable<UserAnswerModel> CurrQuestionUserAnswers { get; set; }
     }

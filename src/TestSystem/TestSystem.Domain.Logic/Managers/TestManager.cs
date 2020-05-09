@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using TestSystem.Data;
 using TestSystem.Domain.Logic.Interfaces;
-using TestSystem.Domain.Models;
 using DataTest = TestSystem.Data.Models.Test;
 using DomainTest = TestSystem.Domain.Models.Test;
 using DataUserTest = TestSystem.Data.Models.UserTest;
@@ -18,6 +17,7 @@ using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 using System.Threading.Tasks;
 using TestSystem.Common.CustomExceptions;
 using AutoMapper.QueryableExtensions;
+using TestSystem.Common;
 
 namespace TestSystem.Domain.Logic.Managers
 {
@@ -80,7 +80,9 @@ namespace TestSystem.Domain.Logic.Managers
 
         public async Task<IReadOnlyCollection<DomainTest>> GetTestsAsync()
         {
-            var domainTests = await _dbContext.Tests.ProjectTo<DomainTest>(_mapper.ConfigurationProvider).ToListAsync();
+            var domainTests = await _dbContext.Tests.ProjectTo<DomainTest>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
 
             return domainTests;
         }
@@ -109,6 +111,7 @@ namespace TestSystem.Domain.Logic.Managers
                 .Include(x => x.Test)
                 .Where(x => x.UserId == userId)
                 .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainUserTests;
@@ -161,7 +164,7 @@ namespace TestSystem.Domain.Logic.Managers
             await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task UpdateUserTestStatusAsync(int userId, int testId, string status)
+        public async Task UpdateUserTestStatusAsync(int userId, int testId, TestStatus status)
         {
             var dataUserTest = await _dbContext.UserTests.FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId);
 
@@ -203,6 +206,7 @@ namespace TestSystem.Domain.Logic.Managers
             return await _dbContext.UserTests
                 .Where(x => x.UserId == userId && testIds.Contains(x.TestId))
                 .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -232,7 +236,9 @@ namespace TestSystem.Domain.Logic.Managers
 
         public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync()
         {
-            var domainTopic = await _dbContext.Topics.ProjectTo<DomainTopic>(_mapper.ConfigurationProvider).ToListAsync();
+            var domainTopic = await _dbContext.Topics.ProjectTo<DomainTopic>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
+                .ToListAsync();
 
             return domainTopic;
         }
@@ -244,6 +250,7 @@ namespace TestSystem.Domain.Logic.Managers
             var domainUserTests = await _dbContext.UserTopics
                 .Where(x => x.UserId == userId && x.TopicId == topicId)
                 .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainUserTests;
@@ -270,6 +277,7 @@ namespace TestSystem.Domain.Logic.Managers
             var domainTests = await _dbContext.Tests
                 .Where(x => x.TopicId == topicId)
                 .ProjectTo<DomainTest>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainTests;
@@ -281,12 +289,13 @@ namespace TestSystem.Domain.Logic.Managers
                 .Include(x => x.Test)
                 .Where(x => x.UserId == userId && x.Test.TopicId == topicId)
                 .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainUserTests;
         }
 
-        public async Task UpdateUserTopicStatus(int userId, int topicId, string status)
+        public async Task UpdateUserTopicStatus(int userId, int topicId, TopicStatus status)
         {
             var dataUserTopic = await _dbContext.UserTopics
               .SingleOrDefaultAsync(x => x.UserId == userId && x.TopicId == topicId);

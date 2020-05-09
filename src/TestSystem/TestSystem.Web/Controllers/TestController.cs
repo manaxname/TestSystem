@@ -305,7 +305,7 @@ namespace TestSystem.Web.Controllers
             var userQuestionIds = new List<int>();
             DomainQuestion currQuestion = null;
             List<UserAnswerModel> currQuestionUserAnswers = null;
-            string currQuestionType = string.Empty;
+            QuestionTypes currQuestionType;
             string currQuestionImageLocation = string.Empty;
             int currQuestionStage = 0;
             int secondsLeft = 0;
@@ -404,7 +404,7 @@ namespace TestSystem.Web.Controllers
             int stagesCount = int.Parse(dictReq["StagesCount"]);
             int currQuestionId = int.Parse(dictReq["CurrQuestionId"]);
             int currQuestionStage = int.Parse(dictReq["CurrQuestionStage"]);
-            string currQuestionType = dictReq["CurrQuestionType"];
+            QuestionTypes currQuestionType = (QuestionTypes)Enum.Parse(typeof(QuestionTypes), dictReq["CurrQuestionType"]);
             List<int> userQuestionIds = dictReq["UserQuestionIds"].Split(",").Select(x => int.Parse(x)).ToList();
             var answerKeySubStr = "AnswerId";
             var currQuestionImageLocation = string.Empty;

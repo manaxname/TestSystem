@@ -10,7 +10,7 @@ using TestSystem.Data;
 namespace TestSystem.Data.Migrations
 {
     [DbContext(typeof(TestSystemContext))]
-    [Migration("20200503201514_Initial")]
+    [Migration("20200509125828_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,8 +63,8 @@ namespace TestSystem.Data.Migrations
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
-                    b.Property<string>("QuestionType")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("QuestionType")
+                        .HasColumnType("int");
 
                     b.Property<int>("Stage")
                         .HasColumnType("int");
@@ -151,8 +151,8 @@ namespace TestSystem.Data.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Role")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -200,8 +200,8 @@ namespace TestSystem.Data.Migrations
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("UserId", "TestId");
 
@@ -224,8 +224,8 @@ namespace TestSystem.Data.Migrations
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("UserId", "TopicId");
 

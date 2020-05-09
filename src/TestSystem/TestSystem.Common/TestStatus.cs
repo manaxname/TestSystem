@@ -4,12 +4,12 @@ using System.Text;
 
 namespace TestSystem.Common
 {
-    public static class TestStatus
+    public enum TestStatus
     {
-        public static string NotStarted = "notStarted";
+        NotStarted,
 
-        public static string NotFinished = "notFinished";
+        NotFinished,
 
-        public static string Finished = "finished";
+        Finished
     }
 }

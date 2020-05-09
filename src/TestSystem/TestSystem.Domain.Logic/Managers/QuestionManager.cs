@@ -46,7 +46,7 @@ namespace TestSystem.Domain.Logic.Managers
             return await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task<int> CreateQuestionAsync(int testId, string text, int stage, int points, string questionType)
+        public async Task<int> CreateQuestionAsync(int testId, string text, int stage, int points, QuestionTypes questionType)
         {
             var domainQuestion = Helper.CreateDomainQuestion(text, stage, points, questionType, testId);
 
@@ -86,6 +86,7 @@ namespace TestSystem.Domain.Logic.Managers
             var domainQuestions = await _dbContext.Questions
                 .Where(question => question.TestId == testId)
                 .ProjectTo<DomainQuestion>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainQuestions;
@@ -96,7 +97,7 @@ namespace TestSystem.Domain.Logic.Managers
             return (await GetQuestionByIdAsync(id)).Text;
         }
 
-        public async Task<string> GetQuestionTypeByIdAsync(int id)
+        public async Task<QuestionTypes> GetQuestionTypeByIdAsync(int id)
         {
             return (await GetQuestionByIdAsync(id)).QuestionType;
         }
@@ -148,6 +149,7 @@ namespace TestSystem.Domain.Logic.Managers
                 .Where(x => x.TestId == testId)
                 .Include(x => x.Answers)
                     .ThenInclude(x => x.UserAnswers)
+                .AsNoTracking()
                 .ToListAsync();
 
             dataQuestions.Sort(new Comparison<DataQuestion>((x, y) => x.Stage.CompareTo(y.Stage)));

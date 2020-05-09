@@ -8,7 +8,7 @@ namespace TestSystem.Domain.Logic
 {
     public static class Helper
     {
-        public static User CreateDomainUser(string email, string passwordHash, string role)
+        public static User CreateDomainUser(string email, string passwordHash, UserRoles role)
         {
             return new User
             {
@@ -39,7 +39,7 @@ namespace TestSystem.Domain.Logic
             };
         }
 
-        public static Question CreateDomainQuestion(string text, int stage, int points, string questionType, int testId)
+        public static Question CreateDomainQuestion(string text, int stage, int points, QuestionTypes questionType, int testId)
         {
             return new Question
             {
@@ -72,7 +72,7 @@ namespace TestSystem.Domain.Logic
             };
         }
 
-        public static UserTest CreateDomainUserTest(int userId, int testId, string status)
+        public static UserTest CreateDomainUserTest(int userId, int testId, TestStatus status)
         {
             return new UserTest
             {

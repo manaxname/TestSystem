@@ -30,7 +30,7 @@ namespace TestSystem.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Email = table.Column<string>(nullable: true),
                     PasswordHash = table.Column<string>(nullable: true),
-                    Role = table.Column<string>(nullable: true),
+                    Role = table.Column<int>(nullable: false),
                     IsDeleted = table.Column<bool>(nullable: false),
                     ConfirmationToken = table.Column<Guid>(nullable: false),
                     IsConfirmed = table.Column<bool>(nullable: false)
@@ -68,7 +68,7 @@ namespace TestSystem.Data.Migrations
                 {
                     UserId = table.Column<int>(nullable: false),
                     TopicId = table.Column<int>(nullable: false),
-                    Status = table.Column<string>(nullable: true),
+                    Status = table.Column<int>(nullable: false),
                     Points = table.Column<int>(nullable: false),
                     IsDeleted = table.Column<bool>(nullable: false)
                 },
@@ -98,7 +98,7 @@ namespace TestSystem.Data.Migrations
                     Text = table.Column<string>(nullable: true),
                     Stage = table.Column<int>(nullable: false),
                     Points = table.Column<int>(nullable: false),
-                    QuestionType = table.Column<string>(nullable: true),
+                    QuestionType = table.Column<int>(nullable: false),
                     ImageFullName = table.Column<string>(nullable: true),
                     IsDeleted = table.Column<bool>(nullable: false),
                     TestId = table.Column<int>(nullable: false)
@@ -120,7 +120,7 @@ namespace TestSystem.Data.Migrations
                 {
                     UserId = table.Column<int>(nullable: false),
                     TestId = table.Column<int>(nullable: false),
-                    Status = table.Column<string>(nullable: true),
+                    Status = table.Column<int>(nullable: false),
                     Points = table.Column<int>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false),
                     IsDeleted = table.Column<bool>(nullable: false)

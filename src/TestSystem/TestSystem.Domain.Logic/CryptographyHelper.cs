@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TestSystem.Domain.Logic
 {
-   internal class CryptographyHelper
+    public class CryptographyHelper
     {
         public static string GetSha256Hash(string input)
         {

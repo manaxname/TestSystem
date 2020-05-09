@@ -49,10 +49,10 @@ namespace TestSystem.Web
                 });
             services.AddAuthorization(opts => {
                 opts.AddPolicy("OnlyForAdmins", policy => {
-                    policy.RequireRole(UserRoles.Admin);
+                    policy.RequireRole(UserRoles.Admin.ToString());
                 });
                 opts.AddPolicy("OnlyForUsers", policy => {
-                    policy.RequireRole(UserRoles.User);
+                    policy.RequireRole(UserRoles.User.ToString());
                 });
             });
 

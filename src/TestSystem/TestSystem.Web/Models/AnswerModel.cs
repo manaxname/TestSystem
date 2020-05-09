@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TestSystem.Common;
 
 namespace TestSystem.Web.Models
 {
@@ -15,6 +16,6 @@ namespace TestSystem.Web.Models
         public int TestId { get; set; }
         public int QuestionId { get; set; }
         public int QuestionText { get; set; }
-        public string QuestionType { get; set; }
+        public QuestionTypes QuestionType { get; set; }
     }
 }

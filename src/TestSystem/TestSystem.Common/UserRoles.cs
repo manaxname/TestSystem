@@ -4,10 +4,10 @@ using System.Text;
 
 namespace TestSystem.Common
 {
-    public static class UserRoles
+    public enum UserRoles
     {
-        public static readonly string Admin = "admin";
+        Admin,
 
-        public static readonly string User = "user";
+        User
     }
 }

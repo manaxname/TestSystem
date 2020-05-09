@@ -104,6 +104,7 @@ namespace TestSystem.Domain.Logic.Managers
             var domainAnswers = await _dbContext.Answers
                 .Where(answer => answer.QuestionId == questionId)
                 .ProjectTo<DomainAnswer>(_mapper.ConfigurationProvider)
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainAnswers;
@@ -130,6 +131,7 @@ namespace TestSystem.Domain.Logic.Managers
             var domainUserAnswers = await _dbContext.UserAnswers.Include(x => x.Answer)
                 .Where(x => x.UserId == userId && x.Answer.QuestionId == questionId)
                 .Select(x => _mapper.Map<DomainUserAnswer>(x))
+                .AsNoTracking()
                 .ToListAsync();
 
             return domainUserAnswers;

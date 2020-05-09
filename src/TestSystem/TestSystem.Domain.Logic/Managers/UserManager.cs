@@ -25,7 +25,7 @@ namespace TestSystem.Domain.Logic.Managers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<DomainUser> CreateUserAsync(string email, string password, string role)
+        public async Task<DomainUser> CreateUserAsync(string email, string password, UserRoles role)
         {
             await ThrowIfUserAlreadyExistsAsync(email);
 

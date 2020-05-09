@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TestSystem.Common;
 
 namespace TestSystem.Domain.Models
 {
     public class UserTest
     {
-        public string Status { get; set; }
+        public TestStatus Status { get; set; }
         public int Points { get; set; }
         public DateTime StartTime { get; set; }
 

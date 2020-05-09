@@ -238,7 +238,7 @@ namespace TestSystem.Web.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
-                new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role),
+                new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role.ToString()),
             };
 
             // создаем объект ClaimsIdentity
