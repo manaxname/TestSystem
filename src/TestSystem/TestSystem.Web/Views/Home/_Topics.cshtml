@@ -36,7 +36,7 @@
     string searchParam = string.Empty;
     if (!string.IsNullOrWhiteSpace(search))
     {
-        search = $"Search={search}";
+        searchParam = $"Search={search}";
     }
 
     bool isAdminAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded;
@@ -47,18 +47,17 @@
     @if (isAdminAuthentificated || isUserAuthentificated)
     {
         <h1 class="display-4 font-weight-normal d-flex justify-content-center">Topics</h1>
-
         <div class="d-flex flex-row bd-highlight mb-3">
             <div class="p-2 bd-highlight">
                 <form asp-controller="Home" asp-action="IndexAjax"
-                      asp-fragment="searchParam"
-                      data-ajax="true"
-                      data-ajax-method="GET"
-                      data-ajax-mode="replace"
-                      data-ajax-update="#items">
+                        asp-fragment="searchParam"
+                        data-ajax="true"
+                        data-ajax-method="GET"
+                        data-ajax-mode="replace"
+                        data-ajax-update="#items">
                     <p>
-                        Name: <input type="text" name="Search" value="@search">
-                        <input type="submit" value="Filter" id="filter" />
+                        Name: <input type="text" name="Search"  value="@search">
+                        <input type="submit" value="Filter" id="filter"/>
                     </p>
                 </form>
             </div>
@@ -74,6 +73,7 @@
                 page-size="size"
                 query-string-key-page-no="Page"
                 query-string-key-page-size="Size"
+                query-string-value="1"
                 ajax="true"
                 ajax-url="/Home/IndexAjax?@searchParam"
                 ajax-update="#items"
@@ -92,6 +92,7 @@
         <hr />
         <a href="/Account/Register">Register </a><span>|</span><a href="/Account/Login"> Login</a>
     }
+
 
     @if (isAdminAuthentificated)
     {
@@ -154,7 +155,6 @@
         </table>
     }
 
-
     @if (isAdminAuthentificated || isUserAuthentificated)
     {
         <paging total-records="topicsCount"
@@ -162,7 +162,7 @@
                 page-size="size"
                 query-string-key-page-no="Page"
                 query-string-key-page-size="Size"
-                query-string-value="a=1"
+                query-string-value="1"
                 ajax="true"
                 ajax-url="/Home/IndexAjax?@searchParam"
                 ajax-update="#items"
@@ -172,11 +172,5 @@
                 page-size-dropdown-items="5-15-30">
         </paging>
     }
+
 </div>
-
-
-<script>
-    $("#filter").click(function () {
-        $("#spinner").css('display', 'inline-block');;
-    });
-</script>

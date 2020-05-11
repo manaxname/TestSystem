@@ -58,7 +58,8 @@ namespace TestSystem.Web.Controllers
 
                         string subject = "Test System";
                         string senderName = "Test System Administration";
-                        var callbackUrl = Url.Action("ConfirmEmail", "Account", new { @UserId = domainUser.Id, @ConfirmationToken = domainUser.ConfirmationToken.ToString() },
+                        var callbackUrl = Url.Action("ConfirmEmail", "Account", new { @UserId = domainUser.Id, 
+                            @ConfirmationToken = domainUser.ConfirmationToken.ToString() },
                             protocol: HttpContext.Request.Scheme);
 
                         string messgae = $"Confirm your account by clicking: <a href='{callbackUrl}'>link</a>";

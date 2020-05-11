@@ -37,7 +37,6 @@
 }
 
 <h4 class="d-flex justify-content-center"> @ViewData["QuestionText"]</h4>
-<hr />
 
 <p>
     @if (questionType == QuestionTypes.Text && answersCount < 1)
@@ -52,7 +51,7 @@
     }
 </p>
 
-<table class="table">
+<table class="table table-striped">
     <thead>
         <tr>
             <th>

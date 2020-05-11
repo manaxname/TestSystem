@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TestSystem.Common;
 using TestSystem.Domain.Models;
@@ -16,7 +17,7 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task<Topic> GetTopicByIdAsync(int id);
         Task<UserTopic> GetUserTopicAsync(int userId, int topicId);
         Task DeleteTestAsync(int id);
-        Task<IReadOnlyCollection<Topic>> GetTopicsAsync();
+        Task<IReadOnlyCollection<Topic>> GetTopicsAsync(string search, int? fromIndex = null, int? toIndex = null, CancellationToken cancellationToken = default);
         Task<IReadOnlyCollection<UserTest>> GetUserTopicsAsync(int userId, int topicId);
         Task<IReadOnlyCollection<Test>> GetTestsAsync();
         Task<IReadOnlyCollection<Test>> GetTestsInTopicAsync(int topicId);
@@ -24,6 +25,7 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task<IReadOnlyCollection<UserTest>> GetUserTestsInTopicAsync(int topicId, int userId);
         Task<IReadOnlyCollection<UserTest>> GetUserTestsAsync(int userId, params int[] testIds);
         Task<UserTest> GetUserTestAsync(int userId, int testId);
+        Task<int> GetTestsInTopicsCountAsync();
         Task UpdateUserTestStatusAsync(int userId, int testId, TestStatus status);
         Task UpdateUserTestPointsAsync(int userId, int testId, int points);
         Task UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time);

@@ -19,14 +19,13 @@
 }
 
 <h4 class="d-flex justify-content-center">@ViewData["TestName"]</h4>
-<hr />
 
 <p>
     @Html.ActionLink("Create new Question", "CreateQuestion", "Test",
         new { @TopicId = topicId, @TestId = testId }, new { @class = "btn btn-primary" })
 </p>
 
-<table class="table">
+<table class="table table-striped">
     <thead>
         <tr>
             <th>

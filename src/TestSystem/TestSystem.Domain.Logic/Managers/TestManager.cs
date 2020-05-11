@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using TestSystem.Common.CustomExceptions;
 using AutoMapper.QueryableExtensions;
 using TestSystem.Common;
+using System.Threading;
 
 namespace TestSystem.Domain.Logic.Managers
 {
@@ -234,13 +235,28 @@ namespace TestSystem.Domain.Logic.Managers
             await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync()
+        public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync(string search, int? fromIndex = null,
+            int? toIndex = null, CancellationToken cancellationToken = default)
         {
-            var domainTopic = await _dbContext.Topics.ProjectTo<DomainTopic>(_mapper.ConfigurationProvider)
-                .AsNoTracking()
-                .ToListAsync();
+            var query = _dbContext.Topics.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x =>
+                    x.Name.ToLower().Contains(search.ToLower()));
+            }
 
-            return domainTopic;
+            query = query.OrderBy(x => x.Name);
+            var total = await query.CountAsync(cancellationToken);
+
+            if (fromIndex.HasValue && toIndex.HasValue)
+            {
+                query = query.Skip(fromIndex.Value).Take(toIndex.Value - fromIndex.Value + 1);
+            }
+
+            var domainTopics = await _mapper.ProjectTo<DomainTopic>(query)
+                .ToListAsync(cancellationToken);
+
+            return domainTopics;
         }
 
         public async Task<IReadOnlyCollection<DomainUserTest>> GetUserTopicsAsync(int userId, int topicId)
@@ -339,6 +355,11 @@ namespace TestSystem.Domain.Logic.Managers
             var domainTopic = _mapper.Map<DomainTopic>(dataTopic);
 
             return domainTopic;
+        }
+
+        public async Task<int> GetTestsInTopicsCountAsync()
+        {
+            return await _dbContext.Topics.CountAsync();
         }
     }
 }

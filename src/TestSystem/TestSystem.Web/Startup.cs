@@ -56,7 +56,7 @@ namespace TestSystem.Web
             {
                 app.UseDeveloperExceptionPage();
                 app.UseOpenApi().UseSwaggerUi3();
-            } 
+            }
             else
             {
                 app.UseStatusCodePagesWithReExecute("/Error/{0}");
@@ -76,6 +76,8 @@ namespace TestSystem.Web
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapRazorPages();
             });
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

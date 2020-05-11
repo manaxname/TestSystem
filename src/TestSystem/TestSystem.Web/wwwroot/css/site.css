@@ -79,20 +79,18 @@
     /* Position the items */
     // &:nth-child(2)
 
-{
-    top: 25%;
-}
+    {
+        top: 25%;
+    }
 
-// &:nth-child(3) {
-    top: 50%;
-}
+    // &:nth-child(3) {
+        top: 50%;
+    }
 
-// &:nth-child(4) {
-    top: 75%;
+    // &:nth-child(4) {
+        top: 75%;
+    }
 }
-
-}
-
 
 .make-me-sticky {
     position: -webkit-sticky;

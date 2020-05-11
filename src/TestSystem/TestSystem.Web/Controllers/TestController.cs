@@ -52,19 +52,21 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public async Task<IActionResult> ShowTestsInTopicToAdmin(int topicId)
+        public async Task<IActionResult> ShowTestsInTopicToAdmin(int topicId, int page = 1, int size = 5)
         {
-            IEnumerable<TestModel> tests = (await _testManager.GetTestsInTopicAsync(topicId))
-                .Select(test => _mapper.Map<TestModel>(test));
+            List<TestModel> tests = (await _testManager.GetTestsInTopicAsync(topicId))
+                .Select(test => _mapper.Map<TestModel>(test)).ToList();
 
             ViewData["TopicId"] = topicId;
+            ViewData["Page"] = page;
+            ViewData["Size"] = size;
 
             return View(tests);
         }
 
         [HttpGet]
         [Authorize(Policy = "OnlyForUsers")]
-        public async Task<IActionResult> ShowTestsInTopicToUser(int topicId)
+        public async Task<IActionResult> ShowTestsInTopicToUser(int topicId, int page = 1, int size = 5)
         {
             string userEmail = User.Identity.Name;
             int userId = await _userManager.GetUserIdAsync(userEmail);
@@ -111,6 +113,8 @@ namespace TestSystem.Web.Controllers
                 .Select(x => _mapper.Map<UserTestModel>(x)).ToList();
 
             ViewData["TopicId"] = topicId;
+            ViewData["Page"] = page;
+            ViewData["Size"] = size;
 
             return View(userTopicTests);
         }
