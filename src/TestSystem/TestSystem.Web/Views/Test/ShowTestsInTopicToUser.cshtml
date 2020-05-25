@@ -1,8 +1,6 @@
 ﻿@model IEnumerable<TestSystem.Web.Models.UserTestModel>
 
 @{
-    ViewData["Title"] = "Tests";
-
     int topicId = int.Parse(ViewData["TopicId"].ToString());
 
     int page = 1;
@@ -32,7 +30,7 @@
     string searchParam = string.Empty;
     if (!string.IsNullOrWhiteSpace(search))
     {
-        search = $"Search={search}";
+        searchParam = $"Search={search}";
     }
 }
 
@@ -84,5 +82,5 @@
 </table>
 
 <div>
-    @Html.ActionLink("Back to Topics", "Index", "Home", new { @TopicId = topicId, @Page = page, @Size = size }, new { @class = "btn btn-secondary" })
+    @Html.ActionLink("Back to Topics", "Index", "Home", new { @TopicId = topicId, @Search = search, @Page = page, @Size = size }, new { @class = "btn btn-secondary" })
 </div>

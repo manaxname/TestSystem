@@ -2,20 +2,7 @@
     window.location.href = window.location.origin + "/" + url;
 }
 
-function send(url) {
-    $.ajax({
-        type: "post",
-        url: url,
-        success: function (data) {
-            //console.log the response
-            console.log(data);
-            //Send another request in 10 seconds.
-            setTimeout(function () {
-                send();
-            }, 10000);
-        }
-    });
-}
+
 
 function startTimer(duration, display, getUrl, redirectUrl) {
     var timer = duration, minutes, seconds;

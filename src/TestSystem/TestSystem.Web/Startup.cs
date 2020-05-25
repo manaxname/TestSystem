@@ -45,9 +45,6 @@ namespace TestSystem.Web
             WebExtensions.SenderEmailPassword = emailConstants.GetValue<string>("SenderEmailPassword");
             WebExtensions.SmtpHost = emailConstants.GetValue<string>("SmtpHost");
             WebExtensions.SmtpPort = emailConstants.GetValue<int>("SmtpPort");
-
-            //services.Configure<RecaptchaSettings>(Configuration.GetSection("RecaptchaSettings"));
-            //services.AddTransient<IRecaptchaService, RecaptchaService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

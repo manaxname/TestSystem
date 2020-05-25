@@ -50,14 +50,14 @@
         <div class="d-flex flex-row bd-highlight mb-3">
             <div class="p-2 bd-highlight">
                 <form asp-controller="Home" asp-action="IndexAjax"
-                        asp-fragment="searchParam"
-                        data-ajax="true"
-                        data-ajax-method="GET"
-                        data-ajax-mode="replace"
-                        data-ajax-update="#items">
+                      asp-fragment="searchParam"
+                      data-ajax="true"
+                      data-ajax-method="GET"
+                      data-ajax-mode="replace"
+                      data-ajax-update="#items">
                     <p>
-                        Name: <input type="text" name="Search"  value="@search">
-                        <input type="submit" value="Filter" id="filter"/>
+                        Name: <input type="text" name="Search" value="@search">
+                        <input type="submit" value="Filter" id="filter" />
                     </p>
                 </form>
             </div>
@@ -105,6 +105,9 @@
                     <th scope="col">
                         @Html.DisplayNameFor(model => model.PassingPoints)
                     </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.IsLocked)
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -119,6 +122,26 @@
                         <td>
                             @topic.PassingPoints
                         </td>
+                        <td>
+                            @if (topic.IsLocked)
+                            {
+                                <div>
+                                    <button id="buttonLock@(topic.Id)"
+                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
+                                        UnLock
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>
+                                    <button id="buttonLock@(topic.Id)"
+                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
+                                        Lock
+                                    </button>
+                                </div>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -130,24 +153,36 @@
             <thead>
                 <tr>
                     <th scope="col">
-                        @Html.DisplayNameFor(model => model.Name)
+                        @Html.DisplayNameFor(model => model.Topic.Name)
                     </th>
                     <th scope="col">
-                        @Html.DisplayNameFor(model => model.PassingPoints)
+                        @Html.DisplayNameFor(model => model.Topic.PassingPoints)
+                    </th>
+                    <th scope="col">
+                        Your Points
+                    </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.Status)
                     </th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var topic in Model)
+                @foreach (var userTopic in Model)
                 {
                     <tr>
                         <td>
-                            @Html.ActionLink(topic.Name, "ShowTestsInTopicToUser", "Test",
-                                        new { @TopicId = topic.Id, @Page = page, @Size = size },
+                            @Html.ActionLink(userTopic.Topic.Name, "ShowTestsInTopicToUser", "Test",
+                                        new { @TopicId = userTopic.Topic.Id, @Search = search, @Page = page, @Size = size },
                                         new { @class = "" })
                         </td>
                         <td>
-                            @topic.PassingPoints
+                            @userTopic.Topic.PassingPoints
+                        </td>
+                        <td>
+                            @userTopic.Points
+                        </td>
+                        <td>
+                            @userTopic.Status
                         </td>
                     </tr>
                 }

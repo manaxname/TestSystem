@@ -1,8 +1,6 @@
 ﻿@model IEnumerable<TestSystem.Web.Models.QuestionModel>
 
 @{
-    Layout = "_LayoutSideBar";
-
     ViewData["Title"] = "Edit Tests";
 
     int testId = 0;
@@ -45,6 +43,9 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.ImageLocation)
+            </th>
+            <th>
+               Edit
             </th>
         </tr>
     </thead>

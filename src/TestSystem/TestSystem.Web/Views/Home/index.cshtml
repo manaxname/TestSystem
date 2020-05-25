@@ -36,7 +36,7 @@
     string searchParam = string.Empty;
     if (!string.IsNullOrWhiteSpace(search))
     {
-        search = $"Search={search}";
+        searchParam = $"Search={search}";
     }
 
     bool isAdminAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded;
@@ -86,8 +86,7 @@
     else
     {
         <div>
-            Вас приветствует система тестирования.
-            Чтобы пройти тестирование - нужно зарегистрироваться.
+                To pass the tests - you need to register.
         </div>
         <hr />
         <a href="/Account/Register">Register </a><span>|</span><a href="/Account/Login"> Login</a>
@@ -104,6 +103,9 @@
                     <th scope="col">
                         @Html.DisplayNameFor(model => model.PassingPoints)
                     </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.IsLocked)
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -118,6 +120,24 @@
                         <td>
                             @topic.PassingPoints
                         </td>
+                        <td>
+                            @if (topic.IsLocked)
+                            {
+                                <div>
+                                    <button id="buttonLock@(topic.Id)" 
+                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
+                                    UnLock</button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>
+                                    <button id="buttonLock@(topic.Id)" 
+                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
+                                    Lock</button>
+                                </div>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -129,24 +149,36 @@
             <thead>
                 <tr>
                     <th scope="col">
-                        @Html.DisplayNameFor(model => model.Name)
+                        @Html.DisplayNameFor(model => model.Topic.Name)
                     </th>
                     <th scope="col">
-                        @Html.DisplayNameFor(model => model.PassingPoints)
+                        Passing Points
+                    </th>
+                    <th scope="col">
+                        Your Points
+                    </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.Status)
                     </th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var topic in Model)
+                @foreach (var userTopic in Model)
                 {
                     <tr>
                         <td>
-                            @Html.ActionLink(topic.Name, "ShowTestsInTopicToUser", "Test",
-                                        new { @TopicId = topic.Id, @Page = page, @Size = size },
+                            @Html.ActionLink(userTopic.Topic.Name, "ShowTestsInTopicToUser", "Test",
+                                        new { @TopicId = userTopic.Topic.Id, @Search = search, @Page = page, @Size = size },
                                         new { @class = "" })
                         </td>
                         <td>
-                            @topic.PassingPoints
+                            @userTopic.Topic.PassingPoints
+                        </td>
+                        <td>
+                            @userTopic.Points
+                        </td>
+                        <td>
+                            @userTopic.Status
                         </td>
                     </tr>
                 }
@@ -179,4 +211,29 @@
     $("#filter").click(function () {
         $("#spinner").css('display', 'inline-block');;
     });
+
+
+
+    function sendAjax(url, loaderId) {
+        $.ajax({
+            //beforeSend: function () {
+            //    $('#' + loaderId).show();
+            //},
+            type: "get",
+            url: url,
+            success: function (data) {
+
+                var topicId = data['topicId'];
+                var isLocked = data['isLocked'];
+
+                if (isLocked) {
+                    $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=false', ${loaderId})`).text("UnLock");
+                }
+                else {
+                    $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=true', ${loaderId})`).text("Lock");
+                }
+                //$('#' + loaderId).hide();
+            }
+        });
+    }
 </script>

@@ -65,8 +65,17 @@ namespace TestSystem.Web.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public async Task<IActionResult> LockTopic(int topicId, bool isLocked)
+        {
+            await _testManager.UpdateTopicIsLocked(topicId, isLocked);
+
+            return Ok( new { topicId, isLocked });
+        }
+
+        [HttpGet]
         [Authorize(Policy = "OnlyForUsers")]
-        public async Task<IActionResult> ShowTestsInTopicToUser(int topicId, int page = 1, int size = 5)
+        public async Task<IActionResult> ShowTestsInTopicToUser(int topicId, string search, int page = 1, int size = 5)
         {
             string userEmail = User.Identity.Name;
             int userId = await _userManager.GetUserIdAsync(userEmail);
@@ -113,12 +122,12 @@ namespace TestSystem.Web.Controllers
                 .Select(x => _mapper.Map<UserTestModel>(x)).ToList();
 
             ViewData["TopicId"] = topicId;
+            ViewData["Search"] = search == null ? string.Empty : search;
             ViewData["Page"] = page;
             ViewData["Size"] = size;
 
             return View(userTopicTests);
         }
-
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
@@ -127,7 +136,6 @@ namespace TestSystem.Web.Controllers
             return View();
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "OnlyForAdmins")]
@@ -135,7 +143,9 @@ namespace TestSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                int topicId = await _testManager.CreateTopicAsync(model.Name, model.PassingPoints);
+                int topicId = await _testManager.CreateTopicAsync(model.Name, model.PassingPoints, true);
+
+                await _testManager.CreateTopicForAllUsers(topicId);
 
                 return RedirectToAction("ShowTestsInTopicToAdmin", "Test", new { @TopicId = topicId });
             }
@@ -641,6 +651,8 @@ namespace TestSystem.Web.Controllers
 
                 int userPoints = userTestsInTopic.Sum(x => x.Points);
                 DomainTopic topic = await _testManager.GetTopicByIdAsync(topicId);
+
+                await _testManager.UpdateUserTopicPoints(userId, topic.Id, userPoints);
 
                 SendEmailToUserAboutPassingTheTopicAsync(User.Identity.Name, topic, userPoints);
 

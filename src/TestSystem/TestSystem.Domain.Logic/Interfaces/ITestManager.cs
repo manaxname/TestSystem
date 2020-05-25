@@ -9,16 +9,20 @@ namespace TestSystem.Domain.Logic.Interfaces
 {
     public interface ITestManager
     {
-        Task<int> CreateTopicAsync(string name, int passingPoints);
+        Task<int> CreateTopicAsync(string name, int passingPoints, bool isLocked);
         Task CreateTestAsync(int topicId, string name, int time);
         Task CreateUserTopicAsync(UserTopic userTopic);
         Task CreateUserTestAsync(UserTest userTest);
+        Task CreateTopicForAllUsers(int topicId);
         Task<Test> GetTestByIdAsync(int id);
         Task<Topic> GetTopicByIdAsync(int id);
         Task<UserTopic> GetUserTopicAsync(int userId, int topicId);
         Task DeleteTestAsync(int id);
-        Task<IReadOnlyCollection<Topic>> GetTopicsAsync(string search, int? fromIndex = null, int? toIndex = null, CancellationToken cancellationToken = default);
-        Task<IReadOnlyCollection<UserTest>> GetUserTopicsAsync(int userId, int topicId);
+        Task<int> GetTopicsCountAsync(string search, bool? isLocked);
+        Task<IReadOnlyCollection<Topic>> GetTopicsAsync(string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false,
+            CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<UserTopic>> GetUserTopicsAsync(int userId,
+            string search, int? fromIndex = null, int? toIndex = null, bool isLocked = false, CancellationToken cancellationToken = default);
         Task<IReadOnlyCollection<Test>> GetTestsAsync();
         Task<IReadOnlyCollection<Test>> GetTestsInTopicAsync(int topicId);
         Task<IReadOnlyCollection<UserTest>> GetUserTestsAsync(int userId);
@@ -30,6 +34,8 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task UpdateUserTestPointsAsync(int userId, int testId, int points);
         Task UpdateUserTestStartTimeAsync(int userId, int testId, DateTime time);
         Task UpdateUserTopicStatus(int userId, int topicId, TopicStatus status);
+        Task UpdateUserTopicPoints(int userId, int topicId, int points);
+        Task UpdateTopicIsLocked(int topicId, bool isLocked);
         Task<bool> IsTestExistsAsync(int id);
         Task<bool> IsUserTestExistsAsync(int usetId, int testId);
         Task<bool> IsUserTopicExistsAsync(int usetId, int topicId);

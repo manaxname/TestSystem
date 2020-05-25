@@ -15,6 +15,8 @@ using TestSystem.Common.CustomExceptions;
 using TestSystem.Domain.Logic.Interfaces;
 using TestSystem.Web.Models;
 using DomainUser = TestSystem.Domain.Models.User;
+using DomainTopic = TestSystem.Domain.Models.Topic;
+using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 
 namespace TestSystem.Web.Controllers
 {
@@ -24,12 +26,15 @@ namespace TestSystem.Web.Controllers
 
         private readonly IEmailService _emailService;
 
+        private readonly ITestManager _testManager;
+
         private readonly IMapper _mapper;
 
-        public AccountController(IUserManager userManager, IEmailService emailService, IMapper mapper)
+        public AccountController(IUserManager userManager, IEmailService emailService, IMapper mapper, ITestManager testManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _testManager = testManager ?? throw new ArgumentNullException(nameof(testManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
@@ -114,6 +119,21 @@ namespace TestSystem.Web.Controllers
                     {
                         await _userManager.UpdateUserConfirmStatus(userId, true);
 
+                        List<DomainTopic> domainTopics = (await _testManager.GetTopicsAsync(null)).ToList();
+
+                        foreach (var domainTopic in domainTopics)
+                        {
+                            var userTopic = new DomainUserTopic
+                            {
+                                UserId = userId,
+                                TopicId = domainTopic.Id,
+                                Status = TopicStatus.NotStarted,
+                                Points = 0
+                            };
+
+                            await _testManager.CreateUserTopicAsync(userTopic);
+                        }
+
                         return RedirectToAction("Login", "Account");
                     }
                     else
@@ -189,63 +209,17 @@ namespace TestSystem.Web.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> OnPostCaptcha()
-        //{
-        //    string recaptchaResponse = Request.Form["g-recaptcha-response"];
-        //    var client = new HttpClient();
-        //    try
-        //    {
-        //        var parameters = new Dictionary<string, string>
-        //        {
-        //            {"secret", "6LfB7vEUAAAAAKyhMP2HE-Jgkk2LgKvJqn_i2cYG"},
-        //            {"response", recaptchaResponse},
-        //            {"remoteip", HttpContext.Connection.RemoteIpAddress.ToString()}
-        //        };
-
-        //        HttpResponseMessage response = await client.PostAsync("https://www.google.com/recaptcha/api/siteverify", new FormUrlEncodedContent(parameters));
-        //        response.EnsureSuccessStatusCode();
-
-        //        string apiResponse = await response.Content.ReadAsStringAsync();
-        //        dynamic apiJson = JObject.Parse(apiResponse);
-        //        if (apiJson.success != true)
-        //        {
-        //            ModelState.AddModelError(string.Empty, "There was an unexpected problem processing this request. Please try again.");
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        BadRequest();
-        //    }
-
-        //    string subject = "Test System";
-        //    string senderName = "Test System Administration";
-        //    var callbackUrl = Url.Action("ConfirmEmail", "Account", new { @UserId = domainUser.Id, @ConfirmationToken = domainUser.ConfirmationToken.ToString() },
-        //        protocol: HttpContext.Request.Scheme);
-
-        //    string messgae = $"Confirm your account by clicking: <a href='{callbackUrl}'>link</a>";
-
-        //    _emailService.SendEmailAsync(senderName, WebExtensions.SenderEmail, WebExtensions.SenderEmailPassword, WebExtensions.SmtpHost,
-        //                   WebExtensions.SmtpPort, model.Email, subject, messgae); // not awaiting
-
-        //    return RedirectToAction("ConfirmEmail", "Account", new { @userId = domainUser.Id });
-        //}
-
         private async Task Authenticate(DomainUser user)
         {
-            // создаем один claim
             var claims = new List<Claim>
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
                 new Claim(ClaimsIdentity.DefaultRoleClaimType, user.Role.ToString()),
             };
 
-            // создаем объект ClaimsIdentity
             ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType,
                 ClaimsIdentity.DefaultRoleClaimType);
-            // установка аутентификационных куки
+
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
     }

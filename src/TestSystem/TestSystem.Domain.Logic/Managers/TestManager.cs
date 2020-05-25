@@ -11,6 +11,7 @@ using DomainTest = TestSystem.Domain.Models.Test;
 using DataUserTest = TestSystem.Data.Models.UserTest;
 using DomainUserTest = TestSystem.Domain.Models.UserTest;
 using DataTopic = TestSystem.Data.Models.Topic;
+using DataUser = TestSystem.Data.Models.User;
 using DomainTopic = TestSystem.Domain.Models.Topic;
 using DataUserTopic = TestSystem.Data.Models.UserTopic;
 using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
@@ -19,6 +20,7 @@ using TestSystem.Common.CustomExceptions;
 using AutoMapper.QueryableExtensions;
 using TestSystem.Common;
 using System.Threading;
+using TestSystem.Data.Models;
 
 namespace TestSystem.Domain.Logic.Managers
 {
@@ -211,9 +213,9 @@ namespace TestSystem.Domain.Logic.Managers
                 .ToListAsync();
         }
 
-        public async Task<int> CreateTopicAsync(string name, int passingPoints)
+        public async Task<int> CreateTopicAsync(string name, int passingPoints, bool isLocked)
         {
-            var domainTopic = Helper.CreateDomainTopic(name, passingPoints);
+            var domainTopic = Helper.CreateDomainTopic(name, passingPoints, isLocked);
 
             var dataTopic = _mapper.Map<DataTopic>(domainTopic);
 
@@ -236,9 +238,14 @@ namespace TestSystem.Domain.Logic.Managers
         }
 
         public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync(string search, int? fromIndex = null,
-            int? toIndex = null, CancellationToken cancellationToken = default)
+            int? toIndex = null, bool? isLocked = null, CancellationToken cancellationToken = default)
         {
             var query = _dbContext.Topics.AsNoTracking();
+            if (isLocked != null)
+            {
+                query = query.Where(x => x.IsLocked == isLocked);
+            }
+
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(x =>
@@ -246,7 +253,6 @@ namespace TestSystem.Domain.Logic.Managers
             }
 
             query = query.OrderBy(x => x.Name);
-            var total = await query.CountAsync(cancellationToken);
 
             if (fromIndex.HasValue && toIndex.HasValue)
             {
@@ -259,17 +265,29 @@ namespace TestSystem.Domain.Logic.Managers
             return domainTopics;
         }
 
-        public async Task<IReadOnlyCollection<DomainUserTest>> GetUserTopicsAsync(int userId, int topicId)
+        public async Task<IReadOnlyCollection<DomainUserTopic>> GetUserTopicsAsync(int userId, 
+            string search, int? fromIndex = null, int? toIndex = null, bool isLocked = false, CancellationToken cancellationToken = default)
         {
-            await ThrowIfUserTopicNotExistsAsync(userId, topicId);
+            var query = _dbContext.UserTopics.AsNoTracking().Include(x => x.Topic).AsNoTracking();
+            query = query.Where(x => x.UserId == userId && x.Topic.IsLocked == isLocked);
 
-            var domainUserTests = await _dbContext.UserTopics
-                .Where(x => x.UserId == userId && x.TopicId == topicId)
-                .ProjectTo<DomainUserTest>(_mapper.ConfigurationProvider)
-                .AsNoTracking()
-                .ToListAsync();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x =>
+                    x.Topic.Name.ToLower().Contains(search.ToLower()));
+            }
 
-            return domainUserTests;
+            query = query.OrderBy(x => x.Topic.Name);
+
+            if (fromIndex.HasValue && toIndex.HasValue)
+            {
+                query = query.Skip(fromIndex.Value).Take(toIndex.Value - fromIndex.Value + 1);
+            }
+
+            var domainUserTopics = await _mapper.ProjectTo<DomainUserTopic>(query)
+                .ToListAsync(cancellationToken);
+
+            return domainUserTopics;
         }
 
         public async Task ThrowIfUserTopicNotExistsAsync(int userId, int topicId)
@@ -360,6 +378,74 @@ namespace TestSystem.Domain.Logic.Managers
         public async Task<int> GetTestsInTopicsCountAsync()
         {
             return await _dbContext.Topics.CountAsync();
+        }
+
+        public async Task CreateTopicForAllUsers(int topicId)
+        {
+            List<DataUser> dataUsers = await _dbContext.Users.Where(x => x.Role == UserRoles.User).ToListAsync();
+
+            foreach (var dataUser in dataUsers)
+            {
+                var userTopic = new DomainUserTopic
+                {
+                    UserId = dataUser.Id,
+                    TopicId = topicId,
+                    Status = TopicStatus.NotStarted,
+                    Points = 0
+                };
+
+                await CreateUserTopicAsync(userTopic);
+            }
+        }
+
+        public async Task<int> GetTopicsCountAsync(string search, bool? isLocked)
+        {
+            IQueryable<DataTopic> query = _dbContext.Topics;
+
+            if (isLocked != null)
+            {
+                query = query.Where(x => x.IsLocked == isLocked);
+            }
+
+            if (search == null)
+            {
+                return await query.CountAsync();
+            }
+
+            return await query.Where(x => x.Name.ToLower().Contains(search.ToLower())).CountAsync();
+        }
+
+        public async Task UpdateUserTopicPoints(int userId, int topicId, int points)
+        {
+            var dataUserTopic = await _dbContext.UserTopics
+                         .SingleOrDefaultAsync(x => x.UserId == userId && x.TopicId == topicId);
+
+            if (dataUserTopic == null)
+            {
+                throw new UserTopicNotFoundException($"userId: {userId}, topicId: {topicId}");
+            }
+
+            dataUserTopic.Points = points;
+
+            _dbContext.UserTopics.Update(dataUserTopic);
+
+            await _dbContext.SaveChangesAsync(default);
+        }
+
+        public async Task UpdateTopicIsLocked(int topicId, bool isLocked)
+        {
+            var dataTopic = await _dbContext.Topics.FirstOrDefaultAsync(x => x.Id == topicId);
+
+            if (dataTopic == null)
+            {
+                throw new TopicNotFoundException($"topicId: {topicId}");
+            }
+
+            dataTopic.IsLocked = isLocked;
+
+            _dbContext.Topics.Update(dataTopic);
+
+            await _dbContext.SaveChangesAsync(default);
         }
     }
 }

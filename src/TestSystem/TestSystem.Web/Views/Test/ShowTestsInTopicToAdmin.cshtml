@@ -1,8 +1,6 @@
 ﻿@model IEnumerable<TestSystem.Web.Models.TestModel>
 
 @{
-    Layout = "_LayoutSideBar";
-
     ViewData["Title"] = "Tests";
 
     int topicId = int.Parse(ViewData["TopicId"].ToString());
@@ -54,6 +52,9 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Minutes)
+            </th>
+            <th>
+                Edit
             </th>
         </tr>
     </thead>

@@ -20,6 +20,7 @@ namespace TestSystem.Domain.Logic.Mappers
         public DomainViewProfile()
         {
             CreateMap<DomainTopic, TopicModel>().ReverseMap();
+            CreateMap<DomainUserTopic, TopicModel>().ReverseMap();
             CreateMap<DomainUser, UserModel>().ReverseMap();
 
             CreateMap<DomainTest, TestModel>()
