@@ -182,7 +182,18 @@
                             @userTopic.Points
                         </td>
                         <td>
-                            @userTopic.Status
+                            @if (userTopic.Status == TopicStatus.Finished)
+                            {
+                                <span>Finished</span>
+                            }
+                            else if (userTopic.Status == TopicStatus.NotStarted)
+                            {
+                                <span>Not Started</span>
+                            }
+                            else if (userTopic.Status == TopicStatus.NotFinished)
+                            {
+                                <span>Not Finished</span>
+                            }
                         </td>
                     </tr>
                 }

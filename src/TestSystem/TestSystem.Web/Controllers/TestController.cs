@@ -211,8 +211,15 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize(Policy = "OnlyForAdmins")]
-        public IActionResult CreateQuestion(int topicId, int testId)
+        public async Task<IActionResult> CreateQuestion(int topicId, int testId)
         {
+            List<int> stages = (await _testManager.GetTestStagesAsync(testId)).ToList();
+
+            if (stages.Count > 0)
+                ViewData["Stage"] = stages[stages.Count - 1];
+            else
+                ViewData["Stage"] = 0;
+
             ViewData["TopicId"] = topicId;
             ViewData["TestId"] = testId;
 
@@ -225,6 +232,27 @@ namespace TestSystem.Web.Controllers
         {
             if (ModelState.IsValid && await _testManager.IsTestExistsAsync(model.TestId))
             {
+                List<int> stages = (await _testManager.GetTestStagesAsync(model.TestId)).ToList();
+
+                if (model.Stage == 0)
+                {
+                    ViewData["Stage"] = model.Stage;
+                    ModelState.AddModelError("", "Invalid Stage");
+
+                    return View(model);
+                }
+
+                if (stages.Count > 0)
+                { 
+                    if (stages[stages.Count - 1] + 2 <= model.Stage)
+                    {
+                        ViewData["Stage"] = model.Stage;
+                        ModelState.AddModelError("", "Invalid Stage");
+
+                        return View(model);
+                    }
+                }
+
                 IFormFile image = model.Image;
 
                 if (image != null)
@@ -340,6 +368,8 @@ namespace TestSystem.Web.Controllers
                 startTime = DateTime.Now;
 
                 await _testManager.UpdateUserTestStartTimeAsync(userId, testId, startTime);
+
+                await _testManager.UpdateUserTopicStatus(userId, topicId, TopicStatus.NotFinished);
             }
             else if (userTest.Status == TestStatus.NotFinished)
             {

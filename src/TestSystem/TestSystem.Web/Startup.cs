@@ -52,7 +52,7 @@ namespace TestSystem.Web
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseOpenApi().UseSwaggerUi3();
+                //app.UseOpenApi().UseSwaggerUi3();
             }
             else
             {

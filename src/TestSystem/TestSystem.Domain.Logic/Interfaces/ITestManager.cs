@@ -17,6 +17,7 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task<Test> GetTestByIdAsync(int id);
         Task<Topic> GetTopicByIdAsync(int id);
         Task<UserTopic> GetUserTopicAsync(int userId, int topicId);
+        Task<IReadOnlyCollection<int>> GetTestStagesAsync(int testId);
         Task DeleteTestAsync(int id);
         Task<int> GetTopicsCountAsync(string search, bool? isLocked);
         Task<IReadOnlyCollection<Topic>> GetTopicsAsync(string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false,

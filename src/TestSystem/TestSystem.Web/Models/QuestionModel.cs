@@ -19,5 +19,6 @@ namespace TestSystem.Web.Models
         public IFormFile Image { get; set; }
 
         public int TestId { get; set; }
+        public int TopicId { get; set; }
     }
 }

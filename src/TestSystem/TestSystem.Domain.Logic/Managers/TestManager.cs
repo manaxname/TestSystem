@@ -447,5 +447,28 @@ namespace TestSystem.Domain.Logic.Managers
 
             await _dbContext.SaveChangesAsync(default);
         }
+
+        public async Task<IReadOnlyCollection<int>> GetTestStagesAsync(int testId)
+        {
+            var dataTest = await _dbContext.Tests.AsNoTracking()
+                .Include(x => x.Questions).AsNoTracking().FirstOrDefaultAsync(x => x.Id == testId);
+
+            if (dataTest == null)
+            {
+                throw new TestNotFoundException($"testId: {testId}");
+            }
+
+            var stages = new List<int>();
+            var questions = dataTest.Questions.ToList();
+
+            foreach (var question in questions)
+            {
+                stages.Add(question.Stage);
+            }
+
+            stages.Sort();
+
+            return stages;
+        }
     }
 }
