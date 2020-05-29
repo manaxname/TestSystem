@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using TestSystem.Common;
 
 namespace TestSystem.Domain.Models
 {
@@ -9,6 +10,7 @@ namespace TestSystem.Domain.Models
         public string Name { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsLocked { get; set; }
+        public TopicType TopicType { get; set; }
 
         public int PassingPoints { get; set; }
 

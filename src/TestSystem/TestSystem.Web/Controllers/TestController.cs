@@ -143,7 +143,7 @@ namespace TestSystem.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                int topicId = await _testManager.CreateTopicAsync(model.Name, model.PassingPoints, true);
+                int topicId = await _testManager.CreateTopicAsync(model.Name, model.PassingPoints, model.TopicType, true);
 
                 await _testManager.CreateTopicForAllUsers(topicId);
 

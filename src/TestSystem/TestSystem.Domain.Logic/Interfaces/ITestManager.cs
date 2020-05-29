@@ -9,7 +9,7 @@ namespace TestSystem.Domain.Logic.Interfaces
 {
     public interface ITestManager
     {
-        Task<int> CreateTopicAsync(string name, int passingPoints, bool isLocked);
+        Task<int> CreateTopicAsync(string name, int passingPoints, TopicType topicType, bool isLocked);
         Task CreateTestAsync(int topicId, string name, int time);
         Task CreateUserTopicAsync(UserTopic userTopic);
         Task CreateUserTestAsync(UserTest userTest);

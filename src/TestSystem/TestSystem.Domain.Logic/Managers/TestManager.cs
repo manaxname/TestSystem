@@ -213,9 +213,9 @@ namespace TestSystem.Domain.Logic.Managers
                 .ToListAsync();
         }
 
-        public async Task<int> CreateTopicAsync(string name, int passingPoints, bool isLocked)
+        public async Task<int> CreateTopicAsync(string name, int passingPoints, TopicType topicType, bool isLocked)
         {
-            var domainTopic = Helper.CreateDomainTopic(name, passingPoints, isLocked);
+            var domainTopic = Helper.CreateDomainTopic(name, passingPoints, topicType, isLocked);
 
             var dataTopic = _mapper.Map<DataTopic>(domainTopic);
 

@@ -30,12 +30,13 @@ namespace TestSystem.Domain.Logic
             };
         }
 
-        public static Topic CreateDomainTopic(string name, int passingPoints, bool islocked = true)
+        public static Topic CreateDomainTopic(string name, int passingPoints, TopicType topicType, bool islocked = true)
         {
             return new Topic
             {
                 Name = name,
                 PassingPoints = passingPoints,
+                TopicType = topicType,
                 IsLocked = islocked,
             };
         }

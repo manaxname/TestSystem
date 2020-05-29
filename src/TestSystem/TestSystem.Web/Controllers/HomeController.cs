@@ -33,7 +33,7 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Index(int? currentTopicId, string search, int page = 1, int size = 5)
+        public async Task<IActionResult> Index(int? currentTopicId, string search, string topicType, int page = 1, int size = 5)
         {
             int fromIndex = (page - 1) * size;
             int toIndex = fromIndex + size - 1;
@@ -64,6 +64,11 @@ namespace TestSystem.Web.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 ViewData["Search"] = search;
+            }
+
+            if (topicType != null)
+            {
+                ViewData["TopicType"] = topicType;
             }
 
             ViewData["Page"] = page;
@@ -76,9 +81,10 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> IndexAjax(int? currentTopicId, string search, int page = 1, int size = 5)
+        public async Task<IActionResult> IndexAjax(int? currentTopicId, string search, string topicType, int page = 1, int size = 5)
         {
             int fromIndex = (page - 1) * size;
+
             int toIndex = fromIndex + size - 1;
             List<TopicModel> topics = null;
             int topicsCount = 0;
@@ -107,6 +113,11 @@ namespace TestSystem.Web.Controllers
             if (!string.IsNullOrWhiteSpace(search))
             {
                 ViewData["Search"] = search;
+            }
+
+            if (topicType != null)
+            {
+                ViewData["TopicType"] = topicType;
             }
 
             ViewData["Page"] = page;

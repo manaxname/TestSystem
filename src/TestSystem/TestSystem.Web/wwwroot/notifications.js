@@ -8,7 +8,7 @@
     //i'm using "click" but it works with any event
     document.addEventListener('click', function (event) {
         //var isClickInsideDropMenu = dropmenu.contains(event.target);
-        var isClickInsideBell = bell.contains(event.target);
+        var isClickInsideBell = bell == null ? false : bell.contains(event.target);
 
         if (isClickInsideBell && bellClickCount % 2 == 0) {
             $(dropmenu).slideToggle(hideDuration);

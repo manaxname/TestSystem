@@ -11,6 +11,7 @@ namespace TestSystem.Web.Models
         public string Name { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsLocked { get; set; }
+        public TopicType TopicType { get; set; }
         public int PassingPoints { get; set; }
 
         public ICollection<Test> Tests { get; set; }

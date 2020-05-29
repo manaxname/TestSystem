@@ -44,13 +44,19 @@
     {
         searchParam = $"Search={search}";
     }
+
+    TopicType? topicType = TopicType.Public;
+    if (ViewData.ContainsKey("TopicType"))
+    {
+        topicType = (TopicType)Enum.Parse(typeof(TopicType), ViewData["TopicType"].ToString());
+    }
 }
 
 <div id="items">
+    <script type="text/javascript" src="~/notifications.js"></script>
+
     @if (isAdminAuthentificated || isUserAuthentificated)
     {
-        <h1 class="display-4 font-weight-normal d-flex justify-content-center">Topics</h1>
-
         <div class="d-flex flex-row bd-highlight mb-3">
             <div class="p-2 bd-highlight">
                 <form asp-controller="Home" asp-action="IndexAjax"
@@ -59,9 +65,17 @@
                       data-ajax-method="GET"
                       data-ajax-mode="replace"
                       data-ajax-update="#items">
+
+                    <p>
+                        <label for="topicType">Select Tests:</label>
+                        <select class="form-control" id="topicType" name="topicType">
+                            <option value="Public">Public</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                    </p>
                     <p>
                         Name: <input type="text" name="Search" value="@search">
-                        <input type="submit" value="Filter" id="filter" />
+                        <input type="submit" value="Filter" id="filter" onclick="filterClick()" />
                     </p>
                 </form>
             </div>
@@ -78,7 +92,7 @@
                 query-string-key-page-no="Page"
                 query-string-key-page-size="Size"
                 ajax="true"
-                ajax-url="/Home/IndexAjax?@searchParam"
+                ajax-url="/Home/IndexAjax?TopicType=@topicType&@searchParam"
                 ajax-update="#items"
                 ajax-loading="#spinner"
                 show-page-size-nav="true"
@@ -107,6 +121,9 @@
                         Passing Points
                     </th>
                     <th scope="col">
+                        Topic Type
+                    </th>
+                    <th scope="col">
                         @Html.DisplayNameFor(model => model.IsLocked)
                     </th>
                 </tr>
@@ -114,36 +131,39 @@
             <tbody>
                 @foreach (var topic in Model)
                 {
-                    <tr>
-                        <td style="word-wrap: break-word">
-                            @Html.ActionLink(topic.Name, "ShowTestsInTopicToAdmin", "Test",
-                                        new { @TopicId = topic.Id, @Page = page, @Size = size },
-                                        new { @class = "" })
-                        </td>
-                        <td>
-                            @topic.PassingPoints
-                        </td>
-                        <td>
-                            @if (topic.IsLocked)
-                            {
-                                <div>
-                                    <button id="buttonLock@(topic.Id)"
-                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
-                                        UnLock
-                                    </button>
-                                </div>
-                            }
-                            else
-                            {
-                                <div>
-                                    <button id="buttonLock@(topic.Id)"
-                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
-                                        Lock
-                                    </button>
-                                </div>
-                            }
-                        </td>
-                    </tr>
+                <tr>
+                    <td style="word-wrap: break-word">
+                        @Html.ActionLink(topic.Name, "ShowTestsInTopicToAdmin", "Test",
+                                    new { @TopicId = topic.Id, @Page = page, @Size = size },
+                                    new { @class = "" })
+                    </td>
+                    <td>
+                        @topic.PassingPoints
+                    </td>
+                    <td>
+                        @topic.TopicType
+                    </td>
+                    <td>
+                        @if (topic.IsLocked)
+                        {
+                            <div>
+                                <button id="buttonLock@(topic.Id)"
+                                        onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
+                                    UnLock
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                <button id="buttonLock@(topic.Id)"
+                                        onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
+                                    Lock
+                                </button>
+                            </div>
+                        }
+                    </td>
+                </tr>
                 }
             </tbody>
         </table>
@@ -212,7 +232,7 @@
                 query-string-key-page-size="Size"
                 query-string-value="a=1"
                 ajax="true"
-                ajax-url="/Home/IndexAjax?@searchParam"
+                ajax-url="/Home/IndexAjax?TopicType=@topicType&@searchParam"
                 ajax-update="#items"
                 ajax-loading="#spinner"
                 show-page-size-nav="true"

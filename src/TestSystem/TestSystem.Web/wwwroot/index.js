@@ -1,10 +1,4 @@
-﻿$(function () {
-    $("#filter").click(function () {
-        $("#spinner").css('display', 'inline-block');;
-    });
-});
-
-function sendAjax(url, loaderId) {
+﻿function sendAjax(url, topic_Id) {
     $.ajax({
         //beforeSend: function () {
         //    $('#' + loaderId).show();
@@ -17,12 +11,50 @@ function sendAjax(url, loaderId) {
             var isLocked = data['isLocked'];
 
             if (isLocked) {
-                $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=false', ${loaderId})`).text("UnLock");
+                $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=false', ${topic_Id})`).text("UnLock");
             }
             else {
-                $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=true', ${loaderId})`).text("Lock");
+                $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=true', ${topic_Id})`).text("Lock");
             }
             //$('#' + loaderId).hide();
         }
     });
+}
+
+function filterClick() {
+    $("#filter").click(function () {
+        $("#spinner").css('display', 'inline-block');
+    });
+}
+
+function btnPublicTopicsClick() {
+    var btnPublicTopics = $("#buttonPublicTopics");
+    var btnPersonalTopics = $("#buttonPersonalTopics");
+    var spinner = $("#spinner");
+
+    spinner.css('display', 'inline-block');
+
+    if (btnPublicTopics.hasClass("btn-light")) {
+        btnPublicTopics.removeClass("btn-light").addClass("btn-primary");
+        btnPersonalTopics.removeClass("btn-primary").addClass("btn-light")
+    }
+
+    $("#topicTitle").remove();
+    $("<h1 id='topicTitle'>Public Tests</h1>").insertAfter(btnPersonalTopics);
+}
+
+function btnPersonalTopicsClick() {
+    var btnPublicTopics = $("#buttonPublicTopics");
+    var btnPersonalTopics = $("#buttonPersonalTopics");
+    var spinner = $("#spinner");
+
+    spinner.css('display', 'inline-block');
+
+    if (btnPersonalTopics.hasClass("btn-light")) {
+        btnPersonalTopics.removeClass("btn-light").addClass("btn-primary");
+        btnPublicTopics.removeClass("btn-primary").addClass("btn-light")
+    }
+
+    $("#topicTitle").remove();
+    $("<h1 id='topicTitle'>Personal Tests</h1>").insertAfter(btnPersonalTopics);
 }
