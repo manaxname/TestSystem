@@ -1,0 +1,83 @@
+﻿@{
+    int? currentTopicId = null;
+    if (ViewData.ContainsKey("TopicId"))
+    {
+        currentTopicId = int.Parse(ViewData["TopicId"].ToString());
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/notifications.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script type="text/javascript" src="~/lib/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="~/lib/popper.js/popper.min.js"></script>
+    <script type="text/javascript" src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <script type="text/javascript" src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="~/tests.js"></script>
+    <script type="text/javascript" src="~/index.js"></script>
+    <script type="text/javascript" src="~/notifications.js"></script>
+    @*<script type="text/javascript" src="~/lib/@@popperjs/core/dist/umd/popper.min.js"></script>*@
+</head>
+<body>
+    <article>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col">
+                    <nav class="navbar navbar-expand-sm navbar-toggleable-sm border-bottom box-shadow mb-3 nav-style">
+                        <div class="container-fluid">
+                            <a class="navbar-brand home-title" asp-area="" asp-controller="Home" asp-action="Index">Test System</a>
+                            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                                    aria-expanded="false" aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+
+                                <partial name="_LoginPartial" />
+
+                                <ul class="navbar-nav flex-grow-1">
+                                    <li class="nav-item">
+                                        <a class="nav-link home-title" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                                    </li>
+
+                                    <partial name="_AccountPartial" />
+
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-8 justify-content-center">
+                        @RenderBody()
+                    </div>
+                    <div class="col-4 justify-content-center">
+
+                        <partial name="_Notifications" />
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <partial name="_Footer" />
+
+    <script type="text/javascript" src="~/lib/jquery-validate/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script type="text/javascript" src="~/lib/jquery-ajax-unobtrusive/jquery.unobtrusive-ajax.min.js"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html> 

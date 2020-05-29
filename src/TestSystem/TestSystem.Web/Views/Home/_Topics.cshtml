@@ -1,6 +1,10 @@
 ﻿@model IEnumerable<TestSystem.Web.Models.TopicModel>
 
 @{
+
+    bool isAdminAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded;
+    bool isUserAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded;
+
     ViewData["Title"] = "Home Page";
 
     int? currentTopicId = null;
@@ -39,8 +43,6 @@
         searchParam = $"Search={search}";
     }
 
-    bool isAdminAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded;
-    bool isUserAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded;
 }
 
 <div id="items">
@@ -103,7 +105,7 @@
                         @Html.DisplayNameFor(model => model.Name)
                     </th>
                     <th scope="col">
-                        @Html.DisplayNameFor(model => model.PassingPoints)
+                        Passing Points
                     </th>
                     <th scope="col">
                         @Html.DisplayNameFor(model => model.IsLocked)
@@ -114,7 +116,7 @@
                 @foreach (var topic in Model)
                 {
                     <tr>
-                        <td>
+                        <td style="word-wrap: break-word">
                             @Html.ActionLink(topic.Name, "ShowTestsInTopicToAdmin", "Test",
                                         new { @TopicId = topic.Id, @Page = page, @Size = size },
                                         new { @class = "" })
@@ -156,7 +158,7 @@
                         @Html.DisplayNameFor(model => model.Topic.Name)
                     </th>
                     <th scope="col">
-                        @Html.DisplayNameFor(model => model.Topic.PassingPoints)
+                        Passing Points
                     </th>
                     <th scope="col">
                         Your Points
@@ -170,7 +172,7 @@
                 @foreach (var userTopic in Model)
                 {
                     <tr>
-                        <td>
+                        <td style="word-wrap: break-word">
                             @Html.ActionLink(userTopic.Topic.Name, "ShowTestsInTopicToUser", "Test",
                                         new { @TopicId = userTopic.Topic.Id, @Search = search, @Page = page, @Size = size },
                                         new { @class = "" })

@@ -1,0 +1,168 @@
+﻿
+
+.main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    position: relative;
+    border: solid;
+}
+
+    .main .notification {
+        position: relative;
+        width: 5em;
+        height: 5em;
+    }
+
+        .main .notification svg {
+            width: 5em;
+            height: 5em;
+        }
+
+            .main .notification svg > path {
+                fill: #c2baba;
+            }
+
+    .main .notification--bell {
+        animation: bell 2.2s linear infinite;
+        transform-origin: 50% 0%;
+    }
+
+    .main .notification--bellClapper {
+        animation: bellClapper 2.2s 0.1s linear infinite;
+    }
+
+    .main .notification--num {
+        position: absolute;
+        top: 0%;
+        left: 60%;
+        font-size: 1.25rem;
+        border-radius: 50%;
+        width: 1.75em;
+        height: 1.75em;
+        background-color: #FF4C13;
+        border: 6px solid #FF4C13;
+        color: #ffffff;
+        text-align: center;
+        line-height: 1em;
+        animation: notification 3.2s ease;
+    }
+
+@keyframes bell {
+    0%, 25%, 75%, 100% {
+        transform: rotate(0deg);
+    }
+
+    40% {
+        transform: rotate(2deg);
+    }
+
+    45% {
+        transform: rotate(-2deg);
+    }
+
+    55% {
+        transform: rotate(1deg);
+    }
+
+    60% {
+        transform: rotate(-1deg);
+    }
+}
+
+@keyframes bellClapper {
+    0%, 25%, 75%, 100% {
+        transform: translateX(0);
+    }
+
+    40% {
+        transform: translateX(-0.15em);
+    }
+
+    45% {
+        transform: translateX(0.15em);
+    }
+
+    55% {
+        transform: translateX(-0.1em);
+    }
+
+    60% {
+        transform: translateX(0.1em);
+    }
+}
+
+@keyframes notification {
+    0%, 25%, 75%, 100% {
+        opacity: 1;
+    }
+
+    30%, 70% {
+        opacity: 0;
+    }
+}
+
+
+
+
+
+
+
+
+.dropdown-menu {
+    top: 60px;
+    right: 0px;
+    left: unset;
+    width: 460px;
+    box-shadow: 0px 5px 7px -1px #c1c1c1;
+    padding-bottom: 0px;
+    padding: 0px;
+}
+
+    .dropdown-menu:before {
+        content: "";
+        position: absolute;
+        top: -20px;
+        right: 12px;
+        border: 10px solid #343A40;
+        border-color: transparent transparent #343A40 transparent;
+    }
+
+.head {
+    padding: 5px 15px;
+    border-radius: 3px 3px 0px 0px;
+}
+
+.footer {
+    padding: 5px 15px;
+    border-radius: 0px 0px 3px 3px;
+}
+
+.notification-box {
+    padding: 10px 0px;
+}
+
+.bg-gray {
+    background-color: #eee;
+}
+
+@media (max-width: 640px) {
+    .dropdown-menu {
+        top: 50px;
+        left: -16px;
+        width: 290px;
+    }
+
+    .nav {
+        display: block;
+    }
+
+        .nav .nav-item, .nav .nav-item a {
+            padding-left: 0px;
+        }
+
+    .message {
+        font-size: 13px;
+    }
+}

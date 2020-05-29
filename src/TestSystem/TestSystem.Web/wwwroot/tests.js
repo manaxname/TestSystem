@@ -2,8 +2,6 @@
     window.location.href = window.location.origin + "/" + url;
 }
 
-
-
 function startTimer(duration, display, getUrl, redirectUrl) {
     var timer = duration, minutes, seconds;
     var i = setInterval(function () {
@@ -25,13 +23,6 @@ function startTimer(duration, display, getUrl, redirectUrl) {
     }, 1000);
 }
 
-function loadAsync() {
-    $(document).ready(function () {
-        $('<img src="/Images/ajax-loader.gif"')
-            .appendTo('#someID')
-
-        $("#box").load("/examples/html/test-content.html");
-
-        $('#someID').find('img').remove();
-    });
+function setUpAndStartTimer(duration, display, getUrl, redirectUrl) {
+    window.onload = startTimer(duration, display, getUrl, redirectUrl);
 }

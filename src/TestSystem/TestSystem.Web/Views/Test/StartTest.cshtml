@@ -17,13 +17,11 @@
 
 <div>Time to finish test: <span id="time" class="text-primary">Loading...</span></div>
 <script>
-    window.onload = function () {
-        var seconds = @Model.SecondsLeft;
-        var display = document.querySelector('#time');
-        var getUrl = "TestTimeExpired?TopicId=@Model.TopicId&TestId=@Model.TestId";
-        var redirectUrl = "Test/ShowTestsInTopicToUser?TopicId=@Model.TopicId";
-        startTimer(seconds, display, getUrl, redirectUrl);
-    };
+    var seconds = @Model.SecondsLeft;
+    var display = document.querySelector('#time');
+    var getUrl = "TestTimeExpired?TopicId=@Model.TopicId&TestId=@Model.TestId";
+    var redirectUrl = "Test/ShowTestsInTopicToUser?TopicId=@Model.TopicId";
+    setUpAndStartTimer(seconds, display, getUrl, redirectUrl);
 </script>
 
 <div id="results" class="d-flex justify-content-center">
