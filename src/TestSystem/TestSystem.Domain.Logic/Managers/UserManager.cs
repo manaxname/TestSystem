@@ -10,6 +10,8 @@ using TestSystem.Common;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using TestSystem.Common.CustomExceptions;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace TestSystem.Domain.Logic.Managers
 {
@@ -156,6 +158,37 @@ namespace TestSystem.Domain.Logic.Managers
             var userPasswordHash = CryptographyHelper.GetSha256Hash(userPassword);
 
             return user.PasswordHash.Equals(userPasswordHash, StringComparison.Ordinal);
+        }
+
+        public IQueryable<DomainUser> GetUsersAsync(string search, int? fromIndex = null, int? toIndex = null, UserRoles userRole = UserRoles.User)
+        {
+            var query = _dbContext.Users.AsNoTracking().Where(x => x.Role == userRole);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Email.ToLower().Contains(search.ToLower()));
+            }
+
+            query = query.OrderBy(x => x.Email);
+
+            if (fromIndex.HasValue && toIndex.HasValue)
+            {
+                query = query.Skip(fromIndex.Value).Take(toIndex.Value - fromIndex.Value + 1);
+            }
+
+            return _mapper.ProjectTo<DomainUser>(query); ;
+        }
+
+        public async Task<int> GetUsersCountAsync(string search, UserRoles userRole = UserRoles.User, CancellationToken cancellationToken = default)
+        {
+            var query = _dbContext.Users.AsNoTracking().Where(x => x.Role == userRole);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x => x.Email.ToLower().Contains(search.ToLower()));
+            }
+
+            return await query.CountAsync(cancellationToken);
         }
     }
 }

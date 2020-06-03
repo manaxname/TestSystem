@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TestSystem.Common;
 using TestSystem.Domain.Models;
@@ -17,6 +19,8 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task<User> GetUserByIdAsync(int id);
         Task<bool> IsUserExistsAsync(int id);
         Task<bool> IsUserExistsAsync(string email);
+        Task<int> GetUsersCountAsync(string search, UserRoles userRole = UserRoles.User, CancellationToken cancellationToken = default);
+        IQueryable<User> GetUsersAsync(string search, int? fromIndex = null, int? toIndex = null, UserRoles userRole = UserRoles.User);
         Task<int> GetUserIdAsync(string email);
         bool ValidateUserPassword(User user, string userPassword);
         Task ThrowIfUserNotExistsAsync(string email);

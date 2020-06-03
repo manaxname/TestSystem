@@ -1,4 +1,4 @@
-﻿function sendAjax(url, topic_Id) {
+﻿function lockClick(url, topic_Id) {
     $.ajax({
         //beforeSend: function () {
         //    $('#' + loaderId).show();
@@ -11,10 +11,12 @@
             var isLocked = data['isLocked'];
 
             if (isLocked) {
-                $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=false', ${topic_Id})`).text("UnLock");
+                $('#buttonLock' + topicId).attr("onclick", `lockClick('/Test/LockTopic?TopicId=${topicId}&IsLocked=false', ${topic_Id})`).text("unlock");
+                $('#buttonLockStatus' + topicId).text("(locked)");
             }
             else {
-                $('#buttonLock' + topicId).attr("onclick", `sendAjax('/Test/LockTopic?TopicId=${topicId}&IsLocked=true', ${topic_Id})`).text("Lock");
+                $('#buttonLock' + topicId).attr("onclick", `lockClick('/Test/LockTopic?TopicId=${topicId}&IsLocked=true', ${topic_Id})`).text("lock");
+                $('#buttonLockStatus' + topicId).text("(unlocked)");
             }
             //$('#' + loaderId).hide();
         }

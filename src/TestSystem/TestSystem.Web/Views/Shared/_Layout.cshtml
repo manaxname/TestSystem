@@ -1,9 +1,5 @@
 ﻿@{
-    int? currentTopicId = null;
-    if (ViewData.ContainsKey("TopicId"))
-    {
-        currentTopicId = int.Parse(ViewData["TopicId"].ToString());
-    }
+
 }
 
 <!DOCTYPE html>
@@ -23,6 +19,7 @@
     <script type="text/javascript" src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="~/tests.js"></script>
     <script type="text/javascript" src="~/index.js"></script>
+    <script type="text/javascript" src="~/notifications.js"></script>
     @*<script type="text/javascript" src="~/lib/@@popperjs/core/dist/umd/popper.min.js"></script>*@
 </head>
 <body>
@@ -57,9 +54,15 @@
 
             <div class="container">
                 <div class="row">
-                    <div class="container content-section">
+                    <div class="col-8 justify-content-center">
                         @RenderBody()
                     </div>
+                    <div class="col-4 justify-content-center">
+
+                        <partial name="_Notifications" />
+
+                    </div>
+
                 </div>
             </div>
         </div>

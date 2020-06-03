@@ -1,0 +1,92 @@
+﻿@model IEnumerable<TestSystem.Web.Models.UserModel>
+
+@{
+    int page = 1;
+    if (ViewData.ContainsKey("Page"))
+    {
+        page = int.Parse(ViewData["Page"].ToString());
+    }
+
+    int size = 5;
+    if (ViewData.ContainsKey("Size"))
+    {
+        size = int.Parse(ViewData["Size"].ToString());
+    }
+
+    int usersCount = 0;
+    if (ViewData.ContainsKey("UsersCount"))
+    {
+        usersCount = int.Parse(ViewData["UsersCount"].ToString());
+    }
+
+    string search = string.Empty;
+    if (ViewData.ContainsKey("Search"))
+    {
+        search = ViewData["Search"].ToString();
+    }
+
+    string searchParam = string.Empty;
+    if (!string.IsNullOrWhiteSpace(search))
+    {
+        searchParam = $"Search={search}";
+    }
+}
+
+
+<div>
+    <div class="d-flex flex-row bd-highlight mb-3">
+        <div class="p-2 bd-highlight">
+            <form asp-controller="Test" asp-action="ShowUsers" method="get">
+                <div class="row">
+                    <div class="col-sm">
+                        <label>Name:</label>
+                        <input type="text" name="Search" value="@search" class="form-control">
+                    </div>
+                    <div class="col-sm">
+                        <label>Filter:</label>
+                        <input type="submit" value="Filter" id="filter" style="width: auto;" class="form-control btn-success" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <paging total-records="usersCount"
+            page-no="page"
+            page-size="size"
+            query-string-key-page-no="Page"
+            query-string-key-page-size="Size"
+            show-page-size-nav="true"
+            max-displayed-pages="5"
+            page-size-dropdown-items="5-15-30">
+    </paging>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Email)
+                </th>
+                <th>
+                    Management
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => user.Email)
+                    </td>
+                    <td>
+                        @Html.ActionLink("Assigned Personal Topics", "ShowUserPersonalTopics", new { @UserId = user.Id }) |
+                        @Html.ActionLink("Assign Personal Topic", "AssignUserPersonalTopics", "Test", new { @UserId = user.Id }, new { @class = "btn btn-primary" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>

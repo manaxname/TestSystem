@@ -10,8 +10,8 @@ using TestSystem.Data;
 namespace TestSystem.Data.Migrations
 {
     [DbContext(typeof(TestSystemContext))]
-    [Migration("20200529151230_topicid")]
-    partial class topicid
+    [Migration("20200603180751_inital")]
+    partial class inital
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -225,6 +225,9 @@ namespace TestSystem.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsTopicAsigned")
                         .HasColumnType("bit");
 
                     b.Property<int>("Points")

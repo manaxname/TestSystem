@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TestSystem.Data.Migrations
 {
-    public partial class initial : Migration
+    public partial class inital : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,6 +15,8 @@ namespace TestSystem.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(nullable: true),
                     IsDeleted = table.Column<bool>(nullable: false),
+                    IsLocked = table.Column<bool>(nullable: false),
+                    TopicType = table.Column<int>(nullable: false),
                     PassingPoints = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -70,7 +72,8 @@ namespace TestSystem.Data.Migrations
                     TopicId = table.Column<int>(nullable: false),
                     Status = table.Column<int>(nullable: false),
                     Points = table.Column<int>(nullable: false),
-                    IsDeleted = table.Column<bool>(nullable: false)
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    IsTopicAsigned = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

@@ -5,15 +5,7 @@
     bool isAdminAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForAdmins")).Succeeded;
     bool isUserAuthentificated = (await AuthorizationService.AuthorizeAsync(User, "OnlyForUsers")).Succeeded;
 
-    if (isUserAuthentificated) Layout = "_LayoutNotifications";
-
     ViewData["Title"] = "Home Page";
-
-    int? currentTopicId = null;
-    if (ViewData.ContainsKey("TopicId"))
-    {
-        currentTopicId = int.Parse(ViewData["TopicId"].ToString());
-    }
 
     int page = 1;
     if (ViewData.ContainsKey("Page"))
@@ -53,8 +45,6 @@
 }
 
 <div id="items">
-    <script type="text/javascript" src="~/notifications.js"></script>
-
     @if (isAdminAuthentificated || isUserAuthentificated)
     {
         <div class="d-flex flex-row bd-highlight mb-3">
@@ -66,17 +56,23 @@
                       data-ajax-mode="replace"
                       data-ajax-update="#items">
 
-                    <p>
-                        <label for="topicType">Select Tests:</label>
-                        <select class="form-control" id="topicType" name="topicType">
-                            <option value="Public">Public</option>
-                            <option value="Personal">Personal</option>
-                        </select>
-                    </p>
-                    <p>
-                        Name: <input type="text" name="Search" value="@search">
-                        <input type="submit" value="Filter" id="filter" onclick="filterClick()" />
-                    </p>
+                    <div class="row">
+                        <div class="col-sm">
+                            <label>Select Tests:</label>
+                            <select class="form-control" id="topicType" name="topicType">
+                                <option value="Public">Public</option>
+                                <option value="Personal">Personal</option>
+                            </select>
+                        </div>
+                        <div class="col-sm">
+                            <label>Name:</label>
+                            <input type="text" name="Search" value="@search" class="form-control">
+                        </div>
+                        <div class="col-sm">
+                            <label>Filter:</label>
+                            <input type="submit" value="Filter" id="filter" onclick="filterClick()" style="width: auto;" class="form-control btn-success" />
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="p-2 bd-highlight">
@@ -147,18 +143,20 @@
                         @if (topic.IsLocked)
                         {
                             <div>
+                                <span id="buttonLockStatus@(topic.Id)">(locked)</span>
                                 <button id="buttonLock@(topic.Id)"
-                                        onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
-                                    UnLock
+                                        onclick="lockClick('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
+                                    unlock
                                 </button>
                             </div>
                         }
                         else
                         {
                             <div>
+                                <span id="buttonLockStatus@(topic.Id)">(unlocked)</span>
                                 <button id="buttonLock@(topic.Id)"
-                                        onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
-                                    Lock
+                                        onclick="lockClick('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
+                                    lock
                                 </button>
                             </div>
                         }

@@ -80,18 +80,23 @@
                       data-ajax-mode="replace"
                       data-ajax-update="#items">
 
-                    <p>
-                        <label for="topicType">Select Tests:</label>
-                        <select class="form-control" id="topicType" name="topicType">
-                            <option value="@topicType">@topicTypeText</option>
-                            <option value="@topicType2">@topicTypeText2</option>
-                        </select>
-                    </p>
-                    <p>
-                        Name: <input type="text" name="Search" value="@search">
-                        <input type="submit" value="Filter" id="filter" onclick="filterClick()" />
-                    </p>
-
+                    <div class="row">
+                        <div class="col-sm">
+                            <label>Select Tests:</label>
+                            <select class="form-control" id="topicType" name="topicType">
+                                <option value="@topicTypeText">@topicTypeText</option>
+                                <option value="@topicTypeText2">@topicTypeText2</option>
+                            </select>
+                        </div>
+                        <div class="col-sm">
+                            <label>Name:</label>
+                            <input type="text" name="Search" value="@search" class="form-control">
+                        </div>
+                        <div class="col-sm">
+                            <label>Filter:</label>
+                            <input type="submit" value="Filter" id="filter" onclick="filterClick()" style="width: auto;" class="form-control btn-success" />
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="p-2 bd-highlight">
@@ -139,6 +144,9 @@
                         Passing Points
                     </th>
                     <th scope="col">
+                        Topic Type
+                    </th>
+                    <th scope="col">
                         @Html.DisplayNameFor(model => model.IsLocked)
                     </th>
                 </tr>
@@ -156,21 +164,26 @@
                             @topic.PassingPoints
                         </td>
                         <td>
+                            @topic.TopicType
+                        </td>
+                        <td>
                             @if (topic.IsLocked)
                             {
                                 <div>
+                                    <span id="buttonLockStatus@(topic.Id)">(locked)</span>
                                     <button id="buttonLock@(topic.Id)"
-                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
-                                        UnLock
+                                            onclick="lockClick('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@false', @(topic.Id))">
+                                        unlock
                                     </button>
                                 </div>
                             }
                             else
                             {
                                 <div>
+                                    <span id="buttonLockStatus@(topic.Id)">(unlocked)</span>
                                     <button id="buttonLock@(topic.Id)"
-                                            onclick="sendAjax('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
-                                        Lock
+                                            onclick="lockClick('/Test/LockTopic?TopicId=@topic.Id&IsLocked=@true', @(topic.Id))">
+                                        lock
                                     </button>
                                 </div>
                             }

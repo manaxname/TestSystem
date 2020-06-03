@@ -225,6 +225,9 @@ namespace TestSystem.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsTopicAsigned")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Points")
                         .HasColumnType("int");
 

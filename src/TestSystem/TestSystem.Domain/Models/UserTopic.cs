@@ -15,5 +15,6 @@ namespace TestSystem.Domain.Models
         public User User { get; set; }
         public int TopicId { get; set; }
         public Topic Topic { get; set; }
+        public bool IsTopicAsigned { get; set; }
     }
 }

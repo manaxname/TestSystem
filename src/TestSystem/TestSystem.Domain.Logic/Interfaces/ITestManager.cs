@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TestSystem.Common;
@@ -19,11 +20,13 @@ namespace TestSystem.Domain.Logic.Interfaces
         Task<UserTopic> GetUserTopicAsync(int userId, int topicId);
         Task<IReadOnlyCollection<int>> GetTestStagesAsync(int testId);
         Task DeleteTestAsync(int id);
-        Task<int> GetTopicsCountAsync(string search, bool? isLocked);
-        Task<IReadOnlyCollection<Topic>> GetTopicsAsync(string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false,
-            CancellationToken cancellationToken = default);
-        Task<IReadOnlyCollection<UserTopic>> GetUserTopicsAsync(int userId,
-            string search, int? fromIndex = null, int? toIndex = null, bool isLocked = false, CancellationToken cancellationToken = default);
+        Task<int> GetTopicsCountAsync(string search, bool? isLocked, TopicType topicType = TopicType.Public, CancellationToken cancellationToken = default);
+        Task<int> GetUserTopicsCountAsync(int userId, string search, bool? isLocked = null, TopicType topicType = TopicType.Public,
+            bool? isTopicAssigned = null, CancellationToken cancellationToken = default);
+        IQueryable<Topic> GetTopicsAsync(string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false,
+            TopicType topicType = TopicType.Public);
+        IQueryable<UserTopic> GetUserTopicsAsync(int userId,
+            string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false, TopicType topicType = TopicType.Public, bool? isTopicAssigned = null);
         Task<IReadOnlyCollection<Test>> GetTestsAsync();
         Task<IReadOnlyCollection<Test>> GetTestsInTopicAsync(int topicId);
         Task<IReadOnlyCollection<UserTest>> GetUserTestsAsync(int userId);

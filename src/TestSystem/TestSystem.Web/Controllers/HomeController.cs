@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TestSystem.Common;
 using TestSystem.Data.Models;
@@ -33,7 +35,7 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Index(int? currentTopicId, string search, string topicType, int page = 1, int size = 5)
+        public async Task<IActionResult> Index(string search, TopicType topicType, int page = 1, int size = 5)
         {
             int fromIndex = (page - 1) * size;
             int toIndex = fromIndex + size - 1;
@@ -42,35 +44,21 @@ namespace TestSystem.Web.Controllers
 
             if (User.IsInRole(UserRoles.Admin.ToString()))
             {
-                topics = (await _testManager.GetTopicsAsync(search, fromIndex, toIndex, null))
-                     .Select(x => _mapper.Map<TopicModel>(x)).ToList();
+                topics = await _testManager.GetTopicsAsync(search, fromIndex, toIndex, null, topicType)
+                    .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
 
-                topicsCount = await _testManager.GetTopicsCountAsync(search, null);
+                topicsCount = await _testManager.GetTopicsCountAsync(search, null, topicType);
             }
             else if (User.IsInRole(UserRoles.User.ToString()))
             {
                 int userId = await _userManager.GetUserIdAsync(User.Identity.Name);
-                topics = (await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, false))
-                     .Select(x => _mapper.Map<TopicModel>(x)).ToList();
+                topics = await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, false, topicType)
+                    .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
 
-                topicsCount = await _testManager.GetTopicsCountAsync(search, false);
+                topicsCount = await _testManager.GetTopicsCountAsync(search, false, topicType);
             }
 
-            if (currentTopicId != null)
-            {
-                ViewData["CurrentTopicId"] = currentTopicId;
-            }
-
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                ViewData["Search"] = search;
-            }
-
-            if (topicType != null)
-            {
-                ViewData["TopicType"] = topicType;
-            }
-
+            ViewData["TopicType"] = topicType;
             ViewData["Page"] = page;
             ViewData["Search"] = search == null ? string.Empty : search;
             ViewData["Size"] = size;
@@ -81,7 +69,7 @@ namespace TestSystem.Web.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> IndexAjax(int? currentTopicId, string search, string topicType, int page = 1, int size = 5)
+        public async Task<IActionResult> IndexAjax(string search, TopicType topicType, int page = 1, int size = 5)
         {
             int fromIndex = (page - 1) * size;
 
@@ -91,35 +79,21 @@ namespace TestSystem.Web.Controllers
 
             if (User.IsInRole(UserRoles.Admin.ToString()))
             {
-                topics = (await _testManager.GetTopicsAsync(search, fromIndex, toIndex, null))
-                     .Select(x => _mapper.Map<TopicModel>(x)).ToList();
+                topics = await _testManager.GetTopicsAsync(search, fromIndex, toIndex, null, topicType)
+                    .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
 
-                topicsCount = await _testManager.GetTopicsCountAsync(search, null);
+                topicsCount = await _testManager.GetTopicsCountAsync(search, null, topicType);
             }
             else if (User.IsInRole(UserRoles.User.ToString()))
             {
                 int userId = await _userManager.GetUserIdAsync(User.Identity.Name);
-                topics = (await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, false))
-                     .Select(x => _mapper.Map<TopicModel>(x)).ToList();
+                topics = await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, false, topicType)
+                     .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
 
-                topicsCount = await _testManager.GetTopicsCountAsync(search, false);
+                topicsCount = await _testManager.GetTopicsCountAsync(search, false, topicType);
             }
 
-            if (currentTopicId != null)
-            {
-                ViewData["CurrentTopicId"] = currentTopicId;
-            }
-
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                ViewData["Search"] = search;
-            }
-
-            if (topicType != null)
-            {
-                ViewData["TopicType"] = topicType;
-            }
-
+            ViewData["TopicType"] = topicType;
             ViewData["Page"] = page;
             ViewData["Search"] = search == null ? string.Empty : search;
             ViewData["Size"] = size;

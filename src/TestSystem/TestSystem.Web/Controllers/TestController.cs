@@ -14,12 +14,15 @@ using DomainUserTest = TestSystem.Domain.Models.UserTest;
 using DomainTest = TestSystem.Domain.Models.Test;
 using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
 using DomainTopic = TestSystem.Domain.Models.Topic;
+using DomainUser = TestSystem.Domain.Models.User;
 using TestSystem.Common;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using TestSystem.Data.Models;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace TestSystem.Web.Controllers
 {
@@ -71,6 +74,46 @@ namespace TestSystem.Web.Controllers
             await _testManager.UpdateTopicIsLocked(topicId, isLocked);
 
             return Ok( new { topicId, isLocked });
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public async Task<IActionResult> ShowUsers(string search, int page = 1, int size = 5)
+        {
+            int fromIndex = (page - 1) * size;
+            int toIndex = fromIndex + size - 1;
+
+            List<UserModel> domainUsers = await _userManager.GetUsersAsync(search, fromIndex, toIndex)
+                    .ProjectTo<UserModel>(_mapper.ConfigurationProvider).ToListAsync();
+
+            int usersCount =  await _userManager.GetUsersCountAsync(search);
+
+            ViewData["Page"] = page;
+            ViewData["Search"] = search == null ? string.Empty : search;
+            ViewData["Size"] = size;
+            ViewData["UsersCount"] = usersCount;
+
+            return View(domainUsers);
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public async Task<IActionResult> ShowUserPersonalTopics(string search, int userId, int page = 1, int size = 5)
+        {
+            int fromIndex = (page - 1) * size;
+            int toIndex = fromIndex + size - 1;
+
+            List<TopicModel> userTopics = await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, null, TopicType.Personal, true)
+                .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
+
+            int topicsCount = await _testManager.GetUserTopicsCountAsync(userId, search, null, TopicType.Personal, true);
+
+            ViewData["Page"] = page;
+            ViewData["Search"] = search == null ? string.Empty : search;
+            ViewData["Size"] = size;
+            ViewData["TopicsCount"] = topicsCount;
+
+            return View(userTopics);
         }
 
         [HttpGet]

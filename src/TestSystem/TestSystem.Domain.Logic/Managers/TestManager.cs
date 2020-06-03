@@ -237,14 +237,16 @@ namespace TestSystem.Domain.Logic.Managers
             await _dbContext.SaveChangesAsync(default);
         }
 
-        public async Task<IReadOnlyCollection<DomainTopic>> GetTopicsAsync(string search, int? fromIndex = null,
-            int? toIndex = null, bool? isLocked = null, CancellationToken cancellationToken = default)
+        public IQueryable<DomainTopic> GetTopicsAsync(string search, int? fromIndex = null,
+            int? toIndex = null, bool? isLocked = null, TopicType topicType = TopicType.Public)
         {
             var query = _dbContext.Topics.AsNoTracking();
             if (isLocked != null)
             {
                 query = query.Where(x => x.IsLocked == isLocked);
             }
+
+            query = query.Where(x => x.TopicType == topicType);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -259,17 +261,24 @@ namespace TestSystem.Domain.Logic.Managers
                 query = query.Skip(fromIndex.Value).Take(toIndex.Value - fromIndex.Value + 1);
             }
 
-            var domainTopics = await _mapper.ProjectTo<DomainTopic>(query)
-                .ToListAsync(cancellationToken);
-
-            return domainTopics;
+            return  _mapper.ProjectTo<DomainTopic>(query);
         }
 
-        public async Task<IReadOnlyCollection<DomainUserTopic>> GetUserTopicsAsync(int userId, 
-            string search, int? fromIndex = null, int? toIndex = null, bool isLocked = false, CancellationToken cancellationToken = default)
+        public IQueryable<DomainUserTopic> GetUserTopicsAsync(int userId, 
+            string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false, TopicType topicType = TopicType.Public, bool? isTopicAssigned = null)
         {
             var query = _dbContext.UserTopics.AsNoTracking().Include(x => x.Topic).AsNoTracking();
-            query = query.Where(x => x.UserId == userId && x.Topic.IsLocked == isLocked);
+            query = query.Where(x => x.UserId == userId && x.Topic.TopicType == topicType);
+
+            if (isTopicAssigned != null)
+            {
+                query = query.Where(x => x.IsTopicAsigned == isTopicAssigned);
+            }
+
+            if (isLocked != null)
+            {
+                query = query.Where(x => x.Topic.IsLocked == isLocked);
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -284,10 +293,7 @@ namespace TestSystem.Domain.Logic.Managers
                 query = query.Skip(fromIndex.Value).Take(toIndex.Value - fromIndex.Value + 1);
             }
 
-            var domainUserTopics = await _mapper.ProjectTo<DomainUserTopic>(query)
-                .ToListAsync(cancellationToken);
-
-            return domainUserTopics;
+            return _mapper.ProjectTo<DomainUserTopic>(query);
         }
 
         public async Task ThrowIfUserTopicNotExistsAsync(int userId, int topicId)
@@ -383,6 +389,7 @@ namespace TestSystem.Domain.Logic.Managers
         public async Task CreateTopicForAllUsers(int topicId)
         {
             List<DataUser> dataUsers = await _dbContext.Users.Where(x => x.Role == UserRoles.User).ToListAsync();
+            DomainTopic domainTopic = await GetTopicByIdAsync(topicId);
 
             foreach (var dataUser in dataUsers)
             {
@@ -391,6 +398,7 @@ namespace TestSystem.Domain.Logic.Managers
                     UserId = dataUser.Id,
                     TopicId = topicId,
                     Status = TopicStatus.NotStarted,
+                    IsTopicAsigned = domainTopic.TopicType == TopicType.Public ? true : false,
                     Points = 0
                 };
 
@@ -398,7 +406,7 @@ namespace TestSystem.Domain.Logic.Managers
             }
         }
 
-        public async Task<int> GetTopicsCountAsync(string search, bool? isLocked)
+        public async Task<int> GetTopicsCountAsync(string search, bool? isLocked, TopicType topicType, CancellationToken cancellationToken = default)
         {
             IQueryable<DataTopic> query = _dbContext.Topics;
 
@@ -407,12 +415,14 @@ namespace TestSystem.Domain.Logic.Managers
                 query = query.Where(x => x.IsLocked == isLocked);
             }
 
+            query = query.Where(x => x.TopicType == topicType);
+
             if (search == null)
             {
                 return await query.CountAsync();
             }
 
-            return await query.Where(x => x.Name.ToLower().Contains(search.ToLower())).CountAsync();
+            return await query.Where(x => x.Name.ToLower().Contains(search.ToLower())).CountAsync(cancellationToken);
         }
 
         public async Task UpdateUserTopicPoints(int userId, int topicId, int points)
@@ -469,6 +479,31 @@ namespace TestSystem.Domain.Logic.Managers
             stages.Sort();
 
             return stages;
+        }
+
+        public async Task<int> GetUserTopicsCountAsync(int userId, string search, bool? isLocked = null, TopicType topicType = TopicType.Public,
+            bool? isTopicAssigned = null, CancellationToken cancellationToken = default)
+        {
+            var query = _dbContext.UserTopics.AsNoTracking();
+            query = query.Where(x => x.UserId == userId && x.Topic.TopicType == topicType);
+
+            if (isTopicAssigned != null)
+            {
+                query = query.Where(x => x.IsTopicAsigned == isTopicAssigned);
+            }
+
+            if (isLocked != null)
+            {
+                query = query.Where(x => x.Topic.IsLocked == isLocked);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(x =>
+                    x.Topic.Name.ToLower().Contains(search.ToLower()));
+            }
+
+            return await query.CountAsync(cancellationToken);
         }
     }
 }

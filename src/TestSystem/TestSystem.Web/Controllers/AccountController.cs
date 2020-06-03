@@ -17,6 +17,7 @@ using TestSystem.Web.Models;
 using DomainUser = TestSystem.Domain.Models.User;
 using DomainTopic = TestSystem.Domain.Models.Topic;
 using DomainUserTopic = TestSystem.Domain.Models.UserTopic;
+using Microsoft.EntityFrameworkCore;
 
 namespace TestSystem.Web.Controllers
 {
@@ -122,7 +123,7 @@ namespace TestSystem.Web.Controllers
                     {
                         await _userManager.UpdateUserConfirmStatus(userId, true);
 
-                        List<DomainTopic> domainTopics = (await _testManager.GetTopicsAsync(null)).ToList();
+                        List<DomainTopic> domainTopics = await _testManager.GetTopicsAsync(null).ToListAsync();
 
                         foreach (var domainTopic in domainTopics)
                         {
@@ -131,6 +132,7 @@ namespace TestSystem.Web.Controllers
                                 UserId = userId,
                                 TopicId = domainTopic.Id,
                                 Status = TopicStatus.NotStarted,
+                                IsTopicAsigned = domainTopic.TopicType == TopicType.Public ? true : false,
                                 Points = 0
                             };
 
