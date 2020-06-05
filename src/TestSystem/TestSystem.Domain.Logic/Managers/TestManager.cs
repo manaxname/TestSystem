@@ -267,7 +267,7 @@ namespace TestSystem.Domain.Logic.Managers
         public IQueryable<DomainUserTopic> GetUserTopicsAsync(int userId, 
             string search, int? fromIndex = null, int? toIndex = null, bool? isLocked = false, TopicType topicType = TopicType.Public, bool? isTopicAssigned = null)
         {
-            var query = _dbContext.UserTopics.AsNoTracking().Include(x => x.Topic).AsNoTracking();
+            var query = _dbContext.UserTopics.Include(x => x.Topic).AsNoTracking();
             query = query.Where(x => x.UserId == userId && x.Topic.TopicType == topicType);
 
             if (isTopicAssigned != null)
@@ -282,8 +282,7 @@ namespace TestSystem.Domain.Logic.Managers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                query = query.Where(x =>
-                    x.Topic.Name.ToLower().Contains(search.ToLower()));
+                query = query.Where(x => x.Topic.Name.ToLower().Contains(search.ToLower()));
             }
 
             query = query.OrderBy(x => x.Topic.Name);

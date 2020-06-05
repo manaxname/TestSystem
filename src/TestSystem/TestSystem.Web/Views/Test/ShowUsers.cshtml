@@ -30,6 +30,7 @@
     {
         searchParam = $"Search={search}";
     }
+    // {UserId: @user.Id, UserEmail: @user.Email}
 }
 
 
@@ -82,11 +83,142 @@
                     </td>
                     <td>
                         @Html.ActionLink("Assigned Personal Topics", "ShowUserPersonalTopics", new { @UserId = user.Id }) |
-                        @Html.ActionLink("Assign Personal Topic", "AssignUserPersonalTopics", "Test", new { @UserId = user.Id }, new { @class = "btn btn-primary" })
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal"
+                                data-whatever="@Newtonsoft.Json.JsonConvert.SerializeObject(new { UserId = user.Id, UserEmail = user.Email})">
+                            Assign Personal Topics
+                        </button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
-
 </div>
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form asp-controller="Test" asp-action="ShowUsers" method="get">
+                    <div class="row">
+
+                        <div class="col-sm">
+                            <label>Topic Name:</label>
+                            <input id="topicName" style="width: auto; display: inline-block;" width="200px;">
+                        </div>
+                        <div class="col-sm">
+                            <label>Add topic:</label>
+                            <button id="addTopicBtn" style="width: 70px; height: 52px" class="form-control btn-success" >Add</button>
+                        </div>
+
+                        <input type="text" id="recipientUserId" class="form-control" hidden>
+                    </div>
+                </form>
+
+                <p class="" id="userTopicsContainer">
+
+                </p>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+    $('#exampleModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var recipient = button.data('whatever'); // Extract info from data-* attributes
+
+        var userId = recipient['UserId'];
+        var userEmail = recipient['UserEmail'];
+
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        var modal = $(this);
+        modal.find('.modal-title').text('Assigning topics to ' + userEmail);
+        modal.find('#recipientUserId').val(userId);
+
+        var userTopics = [];
+        var userTopicsContainer = modal.find('#userTopicsContainer');
+
+        var options = {
+
+            url: function (phrase) {
+                return "/Test/AddUserTopic";
+            },
+
+            getValue: function (element) {
+                return element.name;
+            },
+
+            ajaxSettings: {
+                dataType: "json",
+                method: "POST",
+                data: {
+                    dataType: "json"
+                }
+            },
+
+            preparePostData: function (data) {
+                $('#eac-container-topicName').css("width", "300px");
+                userTopicsContainer.text("");
+                userTopics = [];
+
+                //for (const userTopic of userTopics) {
+                //    userTopicsContainer.append(userTopic);
+                //}
+
+                data.phrase = $("#topicName").val();
+                data.userId = userId;
+                return data;
+            },
+
+            requestDelay: 400,
+
+            list: {
+                match: {
+                    enabled: true
+                },
+                maxNumberOfElements: 5,
+
+                showAnimation: {
+                    type: "fade"
+                },
+                hideAnimation: {
+                    type: "fade"
+                }
+            },
+
+            theme: "funky"
+        };
+
+        var topicInput = $("#topicName");
+        topicInput.easyAutocomplete(options);
+
+        $("#addTopicBtn").click(function (e) {
+            //var val = topicInput.val();
+            //userTopics.push(val);
+            //userTopicsContainer.text(val);
+            e.preventDefault();
+            //e.stopPropagation();
+            $('.modal-body #userTopicsContainer').text("or less per month.");
+        });
+    });
+
+    //$('#exampleModal').modal({
+    //    backdrop: 'static',
+    //});
+
+</script>

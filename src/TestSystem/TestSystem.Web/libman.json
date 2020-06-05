@@ -34,6 +34,16 @@
     {
       "library": "@popperjs/core@2.4.0",
       "destination": "wwwroot/lib/@popperjs/core/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "jqueryui@1.12.1",
+      "destination": "wwwroot/lib/jqueryui/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "easy-autocomplete@1.3.5",
+      "destination": "wwwroot/lib/easy-autocomplete/"
     }
   ]
 }

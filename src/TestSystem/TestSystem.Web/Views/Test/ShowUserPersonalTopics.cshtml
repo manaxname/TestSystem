@@ -30,17 +30,24 @@
     {
         searchParam = $"Search={search}";
     }
+
+    int userId = 0;
+    if (ViewData.ContainsKey("UserId"))
+    {
+        userId = int.Parse(ViewData["UserId"].ToString());
+    }
 }
 
 
 <div>
     <div class="d-flex flex-row bd-highlight mb-3">
         <div class="p-2 bd-highlight">
-            <form asp-controller="Test" asp-action="ShowUsers" method="get">
+            <form asp-controller="Test" asp-action="ShowUserPersonalTopics" method="get">
                 <div class="row">
                     <div class="col-sm">
                         <label>Name:</label>
                         <input type="text" name="Search" value="@search" class="form-control">
+                        <input type="text" name="UserId" id="UserId" value="@userId" class="form-control" hidden>
                     </div>
                     <div class="col-sm">
                         <label>Filter:</label>
@@ -71,12 +78,15 @@
                 <th>
                     @Html.DisplayNameFor(model => model.Topic.IsLocked)
                 </th>
-                @*<th>
-                    @Html.DisplayNameFor(model => model.Topic.)
-                </th>*@
-                @*<th>
-            Management
-        </th>*@
+                <th>
+                    @Html.DisplayNameFor(model => model.Topic.PassingPoints)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Topic.TopicType)
+                </th>
+                <th>
+                    Management
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -86,14 +96,19 @@
                     <td>
                         @userTopic.Topic.Name
                     </td>
-                    <th>
+                    <td>
                         @userTopic.Topic.IsLocked
-                    </th>
-                    @*<td>
-                @Html.ActionLink("Assigned Personal Topics", "ShowUserPersonalTopics", new { @UserId = user.Id }) |
-                @Html.ActionLink("Assign Personal Topic", "AssignUserPersonalTopics", "Test", new { @UserId = user.Id }, new { @class = "btn btn-primary" })
-            </td>*@
-            </tr>
+                    </td>
+                    <td>
+                        @userTopic.Topic.PassingPoints
+                    </td>
+                    <td>
+                        @userTopic.Topic.TopicType
+                    </td>
+                    <td>
+                        @Html.ActionLink("Deassign", "", "Test", new { @UserId = userTopic.UserId }, new { @class = "btn btn-primary" })
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

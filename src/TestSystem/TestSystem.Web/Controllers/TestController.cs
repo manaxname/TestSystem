@@ -103,6 +103,30 @@ namespace TestSystem.Web.Controllers
             int fromIndex = (page - 1) * size;
             int toIndex = fromIndex + size - 1;
 
+            await _userManager.ThrowIfUserNotExistsAsync(userId);
+
+            List<TopicModel> userTopics = await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, null, TopicType.Personal, true)
+                .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
+
+            int topicsCount = await _testManager.GetUserTopicsCountAsync(userId, search, null, TopicType.Personal, true);
+
+            ViewData["Page"] = page;
+            ViewData["Search"] = search == null ? string.Empty : search;
+            ViewData["Size"] = size;
+            ViewData["TopicsCount"] = topicsCount;
+            ViewData["UserId"] = userId;
+
+            return View(userTopics);
+        }
+
+
+        [HttpGet]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public async Task<IActionResult> AssignUserPersonalTopics(string search, int userId, int page = 1, int size = 5)
+        {
+            int fromIndex = (page - 1) * size;
+            int toIndex = fromIndex + size - 1;
+
             List<TopicModel> userTopics = await _testManager.GetUserTopicsAsync(userId, search, fromIndex, toIndex, null, TopicType.Personal, true)
                 .ProjectTo<TopicModel>(_mapper.ConfigurationProvider).ToListAsync();
 
@@ -114,6 +138,17 @@ namespace TestSystem.Web.Controllers
             ViewData["TopicsCount"] = topicsCount;
 
             return View(userTopics);
+        }
+
+
+        [HttpPost]
+        [Authorize(Policy = "OnlyForAdmins")]
+        public async Task<JsonResult> AddUserTopic(int userId, string phrase)
+        {
+            var result = await _testManager.GetUserTopicsAsync(userId, phrase, null, null, null, TopicType.Personal, false)
+                .Select(x => new { name = x.Topic.Name }).ToListAsync();
+
+            return Json(result);
         }
 
         [HttpGet]
